@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import AdminHeader from "@/components/admin/admin-header"
-import AdminSidebar from "@/components/admin/admin-sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -133,12 +131,8 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col">
-        <AdminHeader />
-        <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
+    <div className="p-6">
+      <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold">Products</h1>
@@ -355,8 +349,6 @@ export default function ProductsPage() {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   )
 }

@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import AdminSidebar from "@/components/admin/admin-sidebar"
-import AdminHeader from "@/components/admin/admin-header"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -105,12 +103,8 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col">
-        <AdminHeader />
-        <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
+    <div className="p-6">
+      <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Categories</h1>
@@ -244,8 +238,6 @@ export default function CategoriesPage() {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   )
 }

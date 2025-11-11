@@ -1,7 +1,5 @@
 "use client"
 
-import AdminSidebar from "@/components/admin/admin-sidebar"
-import AdminHeader from "@/components/admin/admin-header"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -13,12 +11,8 @@ export default function OrdersPage() {
   ]
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col">
-        <AdminHeader />
-        <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
+    <div className="p-6">
+      <div className="space-y-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Orders</h1>
               <p className="text-muted-foreground">Manage customer orders</p>
@@ -55,8 +49,6 @@ export default function OrdersPage() {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
   )
 }

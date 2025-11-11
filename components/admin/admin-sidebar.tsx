@@ -21,7 +21,7 @@ export default function AdminSidebar() {
     <aside
       className={`${
         isOpen ? "w-64" : "w-20"
-      } border-r border-border bg-card transition-all duration-300 flex flex-col hidden md:flex`}
+      } border-r border-border bg-card transition-all duration-300 flex flex-col hidden md:flex fixed left-0 top-0 h-screen z-10`}
     >
       <div className="p-6 border-b border-border">
         <div className="text-xl font-bold text-primary">SM</div>

@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-
-
-import AdminSidebar from "@/components/admin/admin-sidebar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Package, ShoppingCart, DollarSign, AlertCircle, Users, Tag } from "lucide-react"
@@ -17,20 +14,13 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [stats, setStats] = useState<Stats>({ orders: 0, revenue: 0, customers: 0, products: 0 })
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const adminLoggedIn = localStorage.getItem('adminLoggedIn')
-    if (adminLoggedIn === 'true') {
-      setIsAuthenticated(true)
-      fetchStats()
-    } else {
-      router.push('/login')
-    }
-  }, [router])
+    fetchStats()
+  }, [])
 
   const fetchStats = async () => {
     try {
@@ -60,16 +50,9 @@ export default function AdminDashboard() {
     }
   }
 
-  if (!isAuthenticated) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  }
-
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar />
-      <div className="flex-1 flex flex-col">
-        <main className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
+    <div className="p-6">
+      <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
               <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>
@@ -231,10 +214,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </Card>
-            </div>
           </div>
-        </main>
+        </div>
       </div>
-    </div>
   )
 }

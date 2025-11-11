@@ -14,10 +14,10 @@ export default function AdminHeader() {
   }
 
   return (
-    <header className="border-b border-border bg-card px-6 py-4">
+    <header className="border-b border-border bg-card px-6 py-4 sticky top-0 z-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-foreground">Admin Panel123 from me</h2>
+          <h2 className="text-lg font-semibold text-foreground">Admin Panel</h2>
         </div>
         
         <div className="flex items-center gap-4">
