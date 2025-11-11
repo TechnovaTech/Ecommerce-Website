@@ -112,17 +112,7 @@ export default function ProductsPage() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
-    setFormData({
-      name: product.name,
-      price: product.price,
-      stock: product.stock,
-      minStock: product.minStock,
-      category: product.category,
-      discount: product.discount,
-      description: product.description,
-      images: product.images || [],
-      status: product.status
-    })
+    setFormData(product)
     setShowForm(true)
   }
 
@@ -187,9 +177,10 @@ export default function ProductsPage() {
                         required
                       >
                         <option value="">Select Category</option>
-                        {categories.map((cat) => (
-                          <option key={cat._id} value={cat.name}>{cat.name}</option>
-                        ))}
+                        <option value="Home & Kitchen">Home & Kitchen</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Sports">Sports</option>
                       </select>
                     </div>
                   </div>
@@ -243,7 +234,7 @@ export default function ProductsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Images</label>
+                    <label className="block text-sm font-medium mb-2">Images (Max 5)</label>
                     <div className="flex gap-2 mb-2">
                       {formData.images.map((img, idx) => (
                         <div key={idx} className="relative">
@@ -282,6 +273,7 @@ export default function ProductsPage() {
                       <Button type="button" onClick={() => document.getElementById('file-upload')?.click()} variant="outline">
                         Upload Images
                       </Button>
+                   
                     </div>
                   </div>
 
