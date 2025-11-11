@@ -10,12 +10,12 @@ import { Badge } from "@/components/ui/badge"
 interface Product {
   _id?: string
   name: string
-  price: number
-  stock: number
-  minStock: number
+  price: number | string
+  stock: number | string
+  minStock: number | string
   category: string
   subcategory: string
-  discount: number
+  discount: number | string
   description: string
   images: string[]
   status: string
@@ -30,12 +30,12 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [formData, setFormData] = useState<Product>({
     name: '',
-    price: 0,
-    stock: 0,
-    minStock: 0,
+    price: '',
+    stock: '',
+    minStock: '',
     category: '',
     subcategory: '',
-    discount: 0,
+    discount: '',
     description: '',
     images: [],
     status: 'in-stock'
@@ -116,8 +116,8 @@ export default function ProductsPage() {
         setShowForm(false)
         setEditingProduct(null)
         setFormData({
-          name: '', price: 0, stock: 0, minStock: 0, category: '', subcategory: '',
-          discount: 0, description: '', images: [], status: 'in-stock'
+          name: '', price: '', stock: '', minStock: '', category: '', subcategory: '',
+          discount: '', description: '', images: [], status: 'in-stock'
         })
       } else {
         alert('Error: ' + (result.error || 'Failed to save product'))
@@ -255,6 +255,7 @@ export default function ProductsPage() {
                       <label className="block text-sm font-medium mb-2">Price</label>
                       <Input
                         type="number"
+                        placeholder="0"
                         value={formData.price}
                         onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                         required
@@ -264,6 +265,7 @@ export default function ProductsPage() {
                       <label className="block text-sm font-medium mb-2">Stock</label>
                       <Input
                         type="number"
+                        placeholder="0"
                         value={formData.stock}
                         onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
                         required
@@ -273,6 +275,7 @@ export default function ProductsPage() {
                       <label className="block text-sm font-medium mb-2">Min Stock</label>
                       <Input
                         type="number"
+                        placeholder="0"
                         value={formData.minStock}
                         onChange={(e) => setFormData({ ...formData, minStock: Number(e.target.value) })}
                         required
@@ -282,6 +285,7 @@ export default function ProductsPage() {
                       <label className="block text-sm font-medium mb-2">Discount %</label>
                       <Input
                         type="number"
+                        placeholder="0"
                         value={formData.discount}
                         onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })}
                       />
