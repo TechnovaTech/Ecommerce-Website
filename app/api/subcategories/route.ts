@@ -16,6 +16,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { name, parentCategory } = await request.json()
+    console.log('Creating subcategory:', { name, parentCategory })
+    
     const client = await clientPromise
     const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
     
@@ -26,9 +28,13 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     }
     
+    console.log('Inserting subcategory:', subcategory)
     const result = await db.collection('subcategories').insertOne(subcategory)
+    console.log('Subcategory created with ID:', result.insertedId)
+    
     return NextResponse.json({ success: true, id: result.insertedId })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create subcategory' }, { status: 500 })
+    console.error('Subcategory creation error:', error)
+    return NextResponse.json({ error: 'Failed to create subcategory: ' + error.message }, { status: 500 })
   }
 }
