@@ -17,6 +17,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Login button clicked')
+    console.log('Email:', email, 'Password:', password)
     setIsLoading(true)
     
     try {
@@ -27,15 +29,23 @@ export default function LoginPage() {
       })
       
       const data = await response.json()
+      console.log('Login response:', data)
       
       if (response.ok) {
         localStorage.setItem('token', data.token)
-        router.push('/')
+        if (data.user?.isAdmin) {
+          console.log('Redirecting to admin')
+          window.location.href = '/admin'
+        } else {
+          console.log('Redirecting to home')
+          router.push('/')
+        }
       } else {
         alert(data.error || 'Invalid credentials')
       }
     } catch (error) {
-      alert('Login failed')
+      console.error('Login error:', error)
+      alert('Login failed: ' + error.message)
     }
     
     setIsLoading(false)
@@ -81,7 +91,7 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full text-white" style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}>
+            <Button type="submit" disabled={isLoading} className="w-full text-white bg-teal-600 hover:bg-teal-700">
               {isLoading ? "Logging in..." : "Login"}
             </Button>
           </form>

@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ShoppingCart } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
@@ -18,32 +19,40 @@ interface Product {
   description: string
   images: string[]
   status: string
+  createdAt?: string
 }
 
-export default function ProductsPage() {
+export default function CategoryPage() {
+  const params = useParams()
+  const categoryName = decodeURIComponent(params.categoryName as string)
   const [products, setProducts] = useState<Product[]>([])
+  const [allProducts, setAllProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<string[]>(["All Products"])
-  const [selectedCategory, setSelectedCategory] = useState("All Products")
-  const [loading, setLoading] = useState(true)
-  const [priceRangeOpen, setPriceRangeOpen] = useState(true)
-  const [colorOpen, setColorOpen] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState(categoryName)
   const [minPrice, setMinPrice] = useState(0)
-  const [selectedColors, setSelectedColors] = useState<string[]>([])
-  const [availabilityOpen, setAvailabilityOpen] = useState(true)
-  const searchParams = useSearchParams()
-  const filter = searchParams.get('filter')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchProducts()
     fetchCategories()
   }, [])
 
+  useEffect(() => {
+    if (allProducts.length > 0) {
+      filterProducts()
+    }
+  }, [selectedCategory, minPrice, allProducts])
+
+  useEffect(() => {
+    setSelectedCategory(categoryName)
+  }, [categoryName])
+
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/products')
       if (response.ok) {
         const data = await response.json()
-        setProducts(data)
+        setAllProducts(data)
       }
     } catch (error) {
       console.error('Failed to fetch products')
@@ -65,27 +74,14 @@ export default function ProductsPage() {
     }
   }
 
-  const filteredProducts = products.filter((product) => {
-    const categoryMatch = selectedCategory === "All Products" || product.category === selectedCategory
-    const priceMatch = product.price >= minPrice
-    return categoryMatch && priceMatch
-  })
-
-  const getFilteredProducts = () => {
-    if (filter === 'new-arrivals') {
-      return products
-        .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
-        .filter(product => product.price >= minPrice)
-    } else if (filter === 'best-sellers') {
-      return products
-        .filter(product => product.discount > 0)
-        .sort((a, b) => b.discount - a.discount)
-        .filter(product => product.price >= minPrice)
-    }
-    return filteredProducts
+  const filterProducts = () => {
+    const filtered = allProducts.filter((product: Product) => {
+      const categoryMatch = selectedCategory === "All Products" || product.category === selectedCategory
+      const priceMatch = product.price >= minPrice
+      return categoryMatch && priceMatch
+    })
+    setProducts(filtered)
   }
-
-  const displayProducts = getFilteredProducts()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,58 +95,22 @@ export default function ProductsPage() {
                 <h3 className="font-semibold text-lg">Filters</h3>
               </div>
               
-
-
               {/* Price Range */}
               <div className="border-b border-gray-200">
-                <button 
-                  onClick={() => setPriceRangeOpen(!priceRangeOpen)}
-                  className="flex items-center justify-between w-full p-4 font-medium hover:bg-gray-50"
-                >
-                  <span>Price Range</span>
-                  <span className={`transform transition-transform ${priceRangeOpen ? 'rotate-180' : ''}`}>⌄</span>
-                </button>
-                {priceRangeOpen && (
-                  <div className="px-4 pb-4">
-                    <div className="text-center mb-3">
-                      <span className="text-sm font-medium text-red-600">Min Price: ₹{minPrice}</span>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-600 block mb-1">Minimum Price: ₹{minPrice}</label>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="100000" 
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-600"
-                      />
-                    </div>
+                <div className="p-4">
+                  <h4 className="font-medium mb-3">Price Range</h4>
+                  <div className="text-center mb-3">
+                    <span className="text-sm font-medium text-red-600">Min Price: ₹{minPrice}</span>
                   </div>
-                )}
-              </div>
-
-              {/* Availability */}
-              <div className="border-b border-gray-200">
-                <button 
-                  onClick={() => setAvailabilityOpen(!availabilityOpen)}
-                  className="flex items-center justify-between w-full p-4 font-medium hover:bg-gray-50"
-                >
-                  <span>Availability</span>
-                  <span className={`transform transition-transform ${availabilityOpen ? 'rotate-180' : ''}`}>⌄</span>
-                </button>
-                {availabilityOpen && (
-                  <div className="px-4 pb-4 space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="mr-2 text-red-600" />
-                      <span className="text-sm">In Stock</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input type="checkbox" className="mr-2 text-red-600" />
-                      <span className="text-sm">On Sale</span>
-                    </label>
-                  </div>
-                )}
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100000" 
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-red-600"
+                  />
+                </div>
               </div>
 
               {/* Reset Button */}
@@ -159,7 +119,6 @@ export default function ProductsPage() {
                   onClick={() => {
                     setSelectedCategory("All Products")
                     setMinPrice(0)
-                    setSelectedColors([])
                   }}
                   className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition"
                 >
@@ -171,11 +130,7 @@ export default function ProductsPage() {
 
           {/* Right Content */}
           <div className="flex-1">
-            <h1 className="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">
-              {filter === 'new-arrivals' ? 'New Arrivals' : 
-               filter === 'best-sellers' ? 'Best Sellers' : 
-               'All Products'}
-            </h1>
+            <h1 className="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">{selectedCategory}</h1>
 
             {/* Category Tabs */}
             <div className="mb-6">
@@ -200,7 +155,7 @@ export default function ProductsPage() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <p className="text-sm text-gray-600">
-                  Showing {displayProducts.length} of {products.length} products
+                  Showing {products.length} products
                   {selectedCategory !== "All Products" && ` in "${selectedCategory}"`}
                 </p>
               </div>
@@ -223,9 +178,9 @@ export default function ProductsPage() {
                   </div>
                 ))}
               </div>
-            ) : displayProducts.length > 0 ? (
+            ) : products.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
-                {displayProducts.map((product) => (
+                {products.map((product) => (
                   <Link key={product._id} href={`/product/${product._id}`}>
                     <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer h-full">
                       <div className="relative w-full h-48 bg-gray-100">
