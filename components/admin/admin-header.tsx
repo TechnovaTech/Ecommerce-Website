@@ -30,7 +30,7 @@ export default function AdminHeader() {
           </div>
           
           <Button variant="ghost" size="sm">
-            <Bell size={20} />
+            <Bell size={20} />bell
           </Button>
           
           <Button variant="ghost" size="sm">
