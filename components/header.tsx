@@ -1,14 +1,47 @@
 "use client"
 
 import Link from "next/link"
-import { Search, LogIn, ShoppingCart } from "lucide-react"
-import { useState } from "react"
+import { Search, LogIn, ShoppingCart, User, ChevronDown } from "lucide-react"
+import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [user, setUser] = useState<any>(null)
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
 
   const brandColor = "#d97706" // Converting lab color to hex equivalent
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token')
+    if (token) {
+      // Fetch user data
+      fetchUserData()
+    }
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch user data:', error)
+    }
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    setUser(null)
+    setShowProfileDropdown(false)
+  }
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.currentTarget.style.color = brandColor
@@ -89,14 +122,58 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* Login */}
-              <Link 
-                href="/login" 
-                className="flex items-center gap-2 text-orange-600 hover:opacity-80 transition-opacity"
-              >
-                <LogIn size={18} />
-                <span className="text-sm font-semibold">Login</span>
-              </Link>
+              {/* Login/Profile */}
+              {user ? (
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                    className="flex items-center gap-2 text-orange-600 hover:opacity-80 transition-opacity"
+                  >
+                    <User size={18} />
+                    <span className="text-sm font-semibold">{user.fullName || user.email}</span>
+                    <ChevronDown size={14} />
+                  </button>
+                  
+                  {showProfileDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                      <div className="p-3 border-b border-gray-100">
+                        <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
+                        <p className="text-xs text-gray-500">{user.email}</p>
+                      </div>
+                      <div className="py-1">
+                        <Link 
+                          href="/profile" 
+                          className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowProfileDropdown(false)}
+                        >
+                          My Profile
+                        </Link>
+                        <Link 
+                          href="/orders" 
+                          className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setShowProfileDropdown(false)}
+                        >
+                          My Orders
+                        </Link>
+                        <button 
+                          onClick={handleLogout}
+                          className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link 
+                  href="/login" 
+                  className="flex items-center gap-2 text-orange-600 hover:opacity-80 transition-opacity"
+                >
+                  <LogIn size={18} />
+                  <span className="text-sm font-semibold">Login</span>
+                </Link>
+              )}
 
               {/* Cart */}
               <Link href="/cart" className="relative">

@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -46,8 +48,24 @@ export default function SignupPage() {
       const data = await response.json()
       
       if (response.ok) {
-        alert("Account created successfully!")
-        setFormData({ fullName: "", email: "", password: "", confirmPassword: "" })
+        // Auto login after successful signup
+        const loginResponse = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          })
+        })
+        
+        const loginData = await loginResponse.json()
+        
+        if (loginResponse.ok) {
+          localStorage.setItem('token', loginData.token)
+          router.push('/')
+        } else {
+          alert("Account created but login failed. Please login manually.")
+        }
       } else {
         alert(data.error || "Failed to create account")
       }

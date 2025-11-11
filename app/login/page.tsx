@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -24,11 +26,13 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password })
       })
       
+      const data = await response.json()
+      
       if (response.ok) {
-        localStorage.setItem('adminLoggedIn', 'true')
-        window.location.href = '/admin'
+        localStorage.setItem('token', data.token)
+        router.push('/')
       } else {
-        alert('Invalid credentials')
+        alert(data.error || 'Invalid credentials')
       }
     } catch (error) {
       alert('Login failed')

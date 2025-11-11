@@ -34,7 +34,7 @@ export default function HeroCarousel() {
 
   return (
     <div className="relative w-full overflow-hidden bg-gradient-to-b from-secondary to-background">
-      <div className="h-80 md:h-96 lg:h-[28rem] relative overflow-hidden">
+      <div className="h-96 md:h-[32rem] lg:h-[40rem] relative overflow-hidden">
         {slides.map((slide, index) => (
           <div
             key={index}
