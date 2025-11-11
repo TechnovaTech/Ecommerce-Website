@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Header from "@/components/header"
+import Footer from "@/components/footer"
 
 interface Product {
   _id: string
@@ -25,6 +26,8 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [priceRangeOpen, setPriceRangeOpen] = useState(true)
   const [colorOpen, setColorOpen] = useState(true)
+  const [priceRange, setPriceRange] = useState({ min: 10, max: 1000 })
+  const [selectedColors, setSelectedColors] = useState<string[]>([])
 
   useEffect(() => {
     fetchProducts()
@@ -58,9 +61,15 @@ export default function ProductsPage() {
     }
   }
 
-  const filteredProducts = selectedCategory === "All Products" 
-    ? products 
-    : products.filter((p) => p.category === selectedCategory)
+  const filteredProducts = products.filter((product) => {
+    // Category filter
+    const categoryMatch = selectedCategory === "All Products" || product.category === selectedCategory
+    
+    // Price filter
+    const priceMatch = product.price >= priceRange.min && product.price <= priceRange.max
+    
+    return categoryMatch && priceMatch
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -83,18 +92,31 @@ export default function ProductsPage() {
                 {priceRangeOpen && (
                   <div className="px-3 lg:px-4 pb-3 lg:pb-4">
                     <div className="text-center mb-3">
-                      <span className="text-xs lg:text-sm font-medium">₹10 - ₹260</span>
+                      <span className="text-xs lg:text-sm font-medium">₹{priceRange.min} - ₹{priceRange.max}</span>
                     </div>
-                    <div className="relative">
-                      <input 
-                        type="range" 
-                        min="10" 
-                        max="1000" 
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                          background: 'linear-gradient(to right, #14b8a6 0%, #14b8a6 30%, #e5e7eb 30%, #e5e7eb 100%)'
-                        }}
-                      />
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs text-gray-600">Min Price</label>
+                        <input 
+                          type="range" 
+                          min="10" 
+                          max="1000" 
+                          value={priceRange.min}
+                          onChange={(e) => setPriceRange(prev => ({ ...prev, min: parseInt(e.target.value) }))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-gray-600">Max Price</label>
+                        <input 
+                          type="range" 
+                          min="10" 
+                          max="1000" 
+                          value={priceRange.max}
+                          onChange={(e) => setPriceRange(prev => ({ ...prev, max: parseInt(e.target.value) }))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -113,22 +135,23 @@ export default function ProductsPage() {
                 </button>
                 {colorOpen && (
                   <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-2">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-xs lg:text-sm">Black</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-xs lg:text-sm">White</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-xs lg:text-sm">Blue</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" />
-                      <span className="text-xs lg:text-sm">Red</span>
-                    </label>
+                    {['Black', 'White', 'Blue', 'Red'].map((color) => (
+                      <label key={color} className="flex items-center">
+                        <input 
+                          type="checkbox" 
+                          className="mr-2" 
+                          checked={selectedColors.includes(color)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedColors([...selectedColors, color])
+                            } else {
+                              setSelectedColors(selectedColors.filter(c => c !== color))
+                            }
+                          }}
+                        />
+                        <span className="text-xs lg:text-sm">{color}</span>
+                      </label>
+                    ))}
                   </div>
                 )}
               </div>
@@ -174,7 +197,7 @@ export default function ProductsPage() {
                 {filteredProducts.map((product) => (
                   <Link key={product._id} href={`/product/${product._id}`}>
                     <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer h-full">
-                      <div className="relative aspect-square bg-gray-100">
+                      <div className="relative w-full h-48 bg-gray-100">
                         <img
                           src={product.images[0] || "/placeholder.svg"}
                           alt={product.name}
@@ -197,7 +220,7 @@ export default function ProductsPage() {
                           )}
                         </div>
                         <div className="text-xs text-gray-500 mb-2">Stock: {product.stock}</div>
-                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white text-xs lg:text-sm py-2" suppressHydrationWarning>
+                        <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs lg:text-sm py-2 flex items-center gap-2 justify-center" suppressHydrationWarning>
                           Add to Cart
                         </Button>
                       </div>
@@ -213,6 +236,7 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import Header from "@/components/header"
+import Footer from "@/components/footer"
+
 
 interface Product {
   _id: string
@@ -105,7 +107,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+      <div className="max-w-7xl mx-auto mt-12 px-4 py-8 pt-24">
         {/* Breadcrumb */}
         <div className="mb-6 text-sm text-gray-600">
           <Link href="/" className="hover:text-red-600">Home</Link> &gt; 
@@ -175,10 +177,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <Button className="bg-red-600 hover:bg-red-700 text-white py-3">
+              <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-sm py-3 flex items-center gap-2 justify-center" suppressHydrationWarning>
                 🛒 Add To Cart
               </Button>
-              <Button className="bg-black hover:bg-gray-800 text-white py-3">
+              <Button className="w-full bg-black hover:bg-gray-800 text-white text-sm py-3" suppressHydrationWarning>
                 ⚡ Buy Now
               </Button>
             </div>
@@ -201,7 +203,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {relatedProducts.map((relatedProduct) => (
                 <Link key={relatedProduct._id} href={`/product/${relatedProduct._id}`}>
                   <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer">
-                    <div className="relative aspect-square bg-gray-100">
+                    <div className="relative w-full h-48 bg-gray-100">
                       <img
                         src={relatedProduct.images[0] || "/placeholder.svg"}
                         alt={relatedProduct.name}
@@ -225,7 +227,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                         )}
                       </div>
                       <div className="text-xs text-gray-500 mb-3">Stock: {relatedProduct.stock}</div>
-                      <Button className="w-full bg-red-600 hover:bg-red-700 text-white text-sm" suppressHydrationWarning>
+                      <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-sm flex items-center gap-2 justify-center" suppressHydrationWarning>
                         Add To Cart
                       </Button>
                     </div>
@@ -234,8 +236,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               ))}
             </div>
           </div>
+          
         )}
+       
       </div>
+      <Footer />
     </div>
   )
 }
