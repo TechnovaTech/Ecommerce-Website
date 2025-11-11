@@ -1,45 +1,71 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Header from "@/components/header"
 
+interface Product {
+  _id: string
+  name: string
+  price: number
+  stock: number
+  category: string
+  discount: number
+  description: string
+  images: string[]
+  status: string
+}
+
 export default function ProductsPage() {
-  const [selectedCategory, setSelectedCategory] = useState("all")
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<string[]>(["All Products"])
+  const [selectedCategory, setSelectedCategory] = useState("All Products")
+  const [loading, setLoading] = useState(true)
   const [priceRangeOpen, setPriceRangeOpen] = useState(true)
   const [colorOpen, setColorOpen] = useState(true)
 
-  const categories = ["All Products", "Home & Kitchen", "Electronics", "Beauty", "Sports", "Toys"]
+  useEffect(() => {
+    fetchProducts()
+    fetchCategories()
+  }, [])
 
-  // Mock products
-  const productImages = [
-    "/phone-stand.jpg", "/portable-phone-stand-holder.jpg", "/hand-chopper.jpg", "/kitchen-organizer.png",
-    "/muffin-tray.jpg", "/bathroom-storage.jpg", "/car-bumper-guard.jpg", "/chair-leg-cover.jpg",
-    "/food-storage-bag.jpg", "/gnat-trap.jpg", "/jewelry-box-organizer.jpg", "/magic-stick-toy.jpg",
-    "/baby-knee-pad.jpg", "/bathroom-storage-organizer-box.jpg", "/chair-leg-protector-furniture-pad.jpg",
-    "/gnat-trap-insect-catcher.jpg", "/hand-chopper-food-processor.jpg", "/muffin-tray-baking-pan.jpg",
-    "/remote-holder-wall-mount.jpg", "/remote-sticker-hook-accessories.jpg", "/tumbling-monkey-toy.jpg",
-    "/baby-knee-pad-crawling-protection.jpg", "/baby-knee-pad-products.jpg", "/hero-banner-for-online-shopping-mall.jpg"
-  ]
-  
-  const allProducts = Array.from({ length: 24 }, (_, i) => ({
-    id: `product-${i}`,
-    name: `Product ${i + 1}`,
-    price: 200 + (i * 17) % 400,
-    originalPrice: 400 + (i * 23) % 500,
-    image: productImages[i],
-    category: categories[((i * 3) % (categories.length - 1)) + 1],
-  }))
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products')
+      if (response.ok) {
+        const data = await response.json()
+        setProducts(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch products')
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const filteredProducts =
-    selectedCategory === "all" ? allProducts : allProducts.filter((p) => p.category === selectedCategory)
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (response.ok) {
+        const data = await response.json()
+        const categoryNames = data.map((cat: any) => cat.name)
+        setCategories(["All Products", ...categoryNames])
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories')
+    }
+  }
+
+  const filteredProducts = selectedCategory === "All Products" 
+    ? products 
+    : products.filter((p) => p.category === selectedCategory)
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+      <div className="max-w-7xl mt-12 mx-auto px-4 py-8 pt-24">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Sidebar - Filters */}
           <div className="w-full lg:w-64 flex-shrink-0">
@@ -113,30 +139,77 @@ export default function ProductsPage() {
           <div className="flex-1">
             <h1 className="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8">All Products</h1>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
-              {filteredProducts.map((product) => (
-                <Link key={product.id} href={`/product/${product.id}`}>
-                  <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer h-full">
-                    <div className="relative aspect-square bg-gray-100">
-                      <img
-                        src={product.image || "/placeholder.svg"}
-                        alt={product.name}
-                        className="w-full h-full object-cover hover:scale-105 transition"
-                      />
-                    </div>
-                    <div className="p-3 lg:p-4">
-                      <h3 className="text-xs lg:text-sm font-medium text-gray-800 line-clamp-2 mb-2">{product.name}</h3>
-                      <div className="flex items-center gap-1 lg:gap-2 mb-2 lg:mb-3">
-                        <span className="text-sm lg:text-lg font-bold" style={{color: 'lab(52.12% 47.1194 27.3658)'}}>₹{product.price}</span>
-                        <span className="text-xs lg:text-sm text-gray-400 line-through">₹{product.originalPrice}</span>
-                      </div>
-                      <Button className="w-full text-white text-xs lg:text-sm py-2 hover:opacity-90" style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}>Add to Cart</Button>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
+            {/* Category Filter */}
+            <div className="mb-6">
+              <div className="flex flex-wrap gap-2">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      selectedCategory === category
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Products Grid */}
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 aspect-square rounded-lg mb-3"></div>
+                    <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                    <div className="bg-gray-200 h-4 rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+                {filteredProducts.map((product) => (
+                  <Link key={product._id} href={`/product/${product._id}`}>
+                    <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer h-full">
+                      <div className="relative aspect-square bg-gray-100">
+                        <img
+                          src={product.images[0] || "/placeholder.svg"}
+                          alt={product.name}
+                          className="w-full h-full object-cover hover:scale-105 transition"
+                        />
+                        {product.discount > 0 && (
+                          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                            {product.discount}% OFF
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 lg:p-4">
+                        <h3 className="text-xs lg:text-sm font-medium text-gray-800 line-clamp-2 mb-2">{product.name}</h3>
+                        <div className="flex items-center gap-1 lg:gap-2 mb-2 lg:mb-3">
+                          <span className="text-sm lg:text-lg font-bold text-red-600">₹{product.price}</span>
+                          {product.discount > 0 && (
+                            <span className="text-xs lg:text-sm text-gray-400 line-through">
+                              ₹{Math.round(product.price / (1 - product.discount / 100))}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 mb-2">Stock: {product.stock}</div>
+                        <Button className="w-full bg-red-600 hover:bg-red-700 text-white text-xs lg:text-sm py-2" suppressHydrationWarning>
+                          Add to Cart
+                        </Button>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">No products found</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

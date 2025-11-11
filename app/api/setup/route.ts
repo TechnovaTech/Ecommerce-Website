@@ -33,6 +33,40 @@ export async function POST() {
       await categoriesCollection.insertMany(defaultCategories)
     }
     
+    // Add sample products if none exist
+    const productsCollection = db.collection('products')
+    const productCount = await productsCollection.countDocuments()
+    
+    if (productCount === 0) {
+      const sampleProducts = [
+        {
+          name: 'Mobile Phone Stand',
+          price: 199,
+          stock: 50,
+          minStock: 5,
+          category: 'Electronics',
+          discount: 10,
+          description: 'Adjustable mobile phone stand for desk use',
+          images: ['/phone-stand.jpg', '/portable-phone-stand-holder.jpg'],
+          status: 'in-stock',
+          createdAt: new Date()
+        },
+        {
+          name: 'Kitchen Organizer Set',
+          price: 349,
+          stock: 30,
+          minStock: 3,
+          category: 'Home & Kitchen',
+          discount: 15,
+          description: 'Complete kitchen organization solution',
+          images: ['/kitchen-organizer.png', '/kitchen-organizer-storage.jpg'],
+          status: 'in-stock',
+          createdAt: new Date()
+        }
+      ]
+      await productsCollection.insertMany(sampleProducts)
+    }
+    
     const admins = db.collection('admins')
     
     const existingAdmin = await admins.findOne({ email: 'admin@shukanmall.com' })
