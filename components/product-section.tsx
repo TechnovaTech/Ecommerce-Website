@@ -151,7 +151,7 @@ export default function ProductSection({ title, category, link }: ProductSection
           {products.map((product) => (
             <Link key={product.id} href={`/product/${product.id}`}>
               <Card className="overflow-hidden hover:shadow-xl hover:border-accent transition duration-300 h-full flex flex-col bg-card">
-                <div className="relative aspect-square bg-secondary overflow-hidden group">
+                <div className="relative w-full h-48 bg-secondary overflow-hidden group">
                   <img
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
