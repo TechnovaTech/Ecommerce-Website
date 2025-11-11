@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import clientPromise from '@/lib/mongodb'
 import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,23 +11,65 @@ export async function POST(request: NextRequest) {
     
     const client = await clientPromise
     const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
-    const admins = db.collection('admins')
     
+    // Check users collection first
+    const users = db.collection('users')
+    const user = await users.findOne({ email })
+    
+    if (user) {
+      const isValid = await bcrypt.compare(password, user.password)
+      
+      if (!isValid) {
+        return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+      }
+      
+      const token = jwt.sign(
+        { userId: user._id, email: user.email },
+        process.env.JWT_SECRET!,
+        { expiresIn: '7d' }
+      )
+      
+      return NextResponse.json({ 
+        success: true, 
+        token,
+        user: { 
+          id: user._id,
+          email: user.email, 
+          fullName: user.fullName 
+        } 
+      })
+    }
+    
+    // Check admins collection as fallback
+    const admins = db.collection('admins')
     const admin = await admins.findOne({ email })
-    console.log('Admin found:', admin ? 'YES' : 'NO')
     
     if (!admin) {
-      return NextResponse.json({ error: 'User not found' }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
     
     const isValid = await bcrypt.compare(password, admin.password)
-    console.log('Password valid:', isValid)
     
     if (!isValid) {
-      return NextResponse.json({ error: 'Wrong password' }, { status: 401 })
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
     
-    return NextResponse.json({ success: true, admin: { email: admin.email, name: admin.name } })
+    const token = jwt.sign(
+      { userId: admin._id, email: admin.email, isAdmin: true },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
+    
+    return NextResponse.json({ 
+      success: true, 
+      token,
+      user: { 
+        id: admin._id,
+        email: admin.email, 
+        name: admin.name,
+        isAdmin: true
+      } 
+    })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json({ error: 'Login failed: ' + error.message }, { status: 500 })

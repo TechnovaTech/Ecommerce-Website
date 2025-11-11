@@ -1,11 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, Tag } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, Tag, LogOut } from "lucide-react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(true)
+  const router = useRouter()
+
+  const handleLogout = () => {
+    window.location.href = '/'
+  }
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin", active: true },
@@ -47,6 +53,15 @@ export default function AdminSidebar() {
         })}
       </nav>
 
+      <div className="p-4 border-t border-border">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg transition text-muted-foreground hover:text-foreground hover:bg-secondary w-full text-left"
+        >
+          <LogOut size={20} className="flex-shrink-0" />
+          {isOpen && <span className="text-sm font-medium">Logout</span>}
+        </button>
+      </div>
 
     </aside>
   )
