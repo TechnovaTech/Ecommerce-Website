@@ -13,8 +13,8 @@ export default function Home() {
         <HeroCarousel />
         <CategoriesGrid />
         {/* <BannerSection /> */}
-        <ProductSection title="Top Deals" category="top-deals" link="/deals" />
-        <ProductSection title="Hot Selling" category="hot-selling" link="/hot-selling" />
+        <ProductSection title="New Arrivals" category="new-arrivals" link="/new-arrivals" />
+        <ProductSection title="Best Sellers" category="best-sellers" link="/best-sellers" />
       </main>
       <Footer />
     </>

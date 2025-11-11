@@ -149,7 +149,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
           {/* Details Section */}
           <div className="bg-white p-8 rounded-lg">
-            <h1 className="text-2xl font-bold mb-2">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{product.name}</h1>
             
             {/* Price Section */}
             <div className="mb-4">
@@ -187,7 +187,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             
             {/* Description */}
             <div className="mt-6">
-              <h3 className="font-bold mb-3">Description</h3>
+              <h3 className="text-lg font-bold text-foreground mb-3">Description</h3>
               <p className="text-gray-700 leading-relaxed">{product.description}</p>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="bg-white rounded-lg p-8">
-            <h2 className="text-2xl font-bold mb-6">Related Products</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Related Products</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {relatedProducts.map((relatedProduct) => (
                 <Link key={relatedProduct._id} href={`/product/${relatedProduct._id}`}>
@@ -236,9 +236,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               ))}
             </div>
           </div>
-          
         )}
-       
       </div>
       <Footer />
     </div>

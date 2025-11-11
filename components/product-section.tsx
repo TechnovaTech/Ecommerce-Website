@@ -1,129 +1,22 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Star, ShoppingCart } from "lucide-react"
+import { ShoppingCart } from "lucide-react"
 
 interface Product {
-  id: string
+  _id: string
   name: string
   price: number
-  originalPrice?: number
-  discount?: string
-  image: string
-  rating?: number
-  reviews?: number
-}
-
-const mockProducts: Record<string, Product[]> = {
-  "home-kitchen": [
-    {
-      id: "1",
-      name: "Silicon Bag Food Storage Bag Kitchenware",
-      price: 299,
-      originalPrice: 599,
-      image: "/food-storage-bag.jpg",
-      rating: 4.5,
-      reviews: 128,
-    },
-    {
-      id: "2",
-      name: "12 Cup Muffin Tray Cup Cake Pan",
-      price: 199,
-      originalPrice: 499,
-      image: "/muffin-tray-baking-pan.jpg",
-      rating: 4.3,
-      reviews: 95,
-    },
-    {
-      id: "3",
-      name: "Gnat Trap Catcher Fruit Home & Kitchen",
-      price: 149,
-      image: "/gnat-trap-insect-catcher.jpg",
-      rating: 4,
-      reviews: 42,
-    },
-    {
-      id: "4",
-      name: "Push Chopper Hand Press Chopper",
-      price: 249,
-      originalPrice: 599,
-      image: "/hand-chopper-food-processor.jpg",
-      rating: 4.6,
-      reviews: 156,
-    },
-  ],
-  "top-deals": [
-    {
-      id: "5",
-      name: "Car Bumper Guard 2 Pcs Outdoor",
-      price: 449,
-      discount: "Min 30% OFF",
-      image: "/car-bumper-guard.jpg",
-      rating: 4.2,
-      reviews: 78,
-    },
-    {
-      id: "6",
-      name: "Tumbling Monkey Toys",
-      price: 99,
-      discount: "Min 50% OFF",
-      image: "/tumbling-monkey-toy.jpg",
-      rating: 4.4,
-      reviews: 203,
-    },
-    {
-      id: "7",
-      name: "Magic Stick Toys",
-      price: 179,
-      discount: "Min 20% OFF",
-      image: "/magic-stick-toy.jpg",
-      rating: 4.1,
-      reviews: 67,
-    },
-    {
-      id: "8",
-      name: "Apple Baby Knee Pad Baby Products",
-      price: 89,
-      discount: "Min 60% OFF",
-      image: "/baby-knee-pad-crawling-protection.jpg",
-      rating: 4.7,
-      reviews: 312,
-    },
-  ],
-  "hot-selling": [
-    {
-      id: "9",
-      name: "Silicone Anti Slip Chair Leg Cover",
-      price: 129,
-      image: "/chair-leg-protector-furniture-pad.jpg",
-      rating: 4.3,
-      reviews: 89,
-    },
-    {
-      id: "10",
-      name: "Kitchen Organizer Set",
-      price: 349,
-      image: "/kitchen-organizer-storage.jpg",
-      rating: 4.5,
-      reviews: 145,
-    },
-    {
-      id: "11",
-      name: "Portable Phone Stand",
-      price: 199,
-      image: "/portable-phone-stand-holder.jpg",
-      rating: 4.6,
-      reviews: 234,
-    },
-    {
-      id: "12",
-      name: "Bathroom Storage Box",
-      price: 249,
-      image: "/bathroom-storage-organizer-box.jpg",
-      rating: 4.2,
-      reviews: 112,
-    },
-  ],
+  stock: number
+  category: string
+  discount: number
+  description: string
+  images: string[]
+  status: string
+  createdAt?: string
 }
 
 interface ProductSectionProps {
@@ -133,7 +26,43 @@ interface ProductSectionProps {
 }
 
 export default function ProductSection({ title, category, link }: ProductSectionProps) {
-  const products = mockProducts[category] || []
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products')
+      if (response.ok) {
+        const data = await response.json()
+        let filteredProducts = data
+        
+        if (category === 'new-arrivals') {
+          // Show latest 4 products (sorted by creation date)
+          filteredProducts = data
+            .sort((a: Product, b: Product) => 
+              new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime()
+            )
+            .slice(0, 4)
+        } else if (category === 'best-sellers') {
+          // Show products with highest discount (most selling)
+          filteredProducts = data
+            .filter((product: Product) => product.discount > 0)
+            .sort((a: Product, b: Product) => b.discount - a.discount)
+            .slice(0, 4)
+        }
+        
+        setProducts(filteredProducts)
+      }
+    } catch (error) {
+      console.error('Failed to fetch products')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <section className="py-12 md:py-16 bg-background">
@@ -147,64 +76,66 @@ export default function ProductSection({ title, category, link }: ProductSection
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-          {products.map((product) => (
-            <Link key={product.id} href={`/product/${product.id}`}>
-              <Card className="overflow-hidden hover:shadow-xl hover:border-accent transition duration-300 h-full flex flex-col bg-card">
-                <div className="relative w-full h-48 bg-secondary overflow-hidden group">
-                  <img
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
-                  />
-                  {product.discount && (
-                    <div className="absolute top-2 right-2 bg-destructive text-white text-xs font-bold px-2 py-1 rounded-full">
-                      {product.discount}
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-3 md:p-4 flex-1 flex flex-col">
-                  <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-2">{product.name}</h3>
-
-                  {product.rating && (
-                    <div className="flex items-center gap-1 mb-3">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={14}
-                            className={
-                              i < Math.floor(product.rating!) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                            }
-                          />
-                        ))}
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 h-48 rounded-lg mb-3"></div>
+                <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                <div className="bg-gray-200 h-4 rounded w-3/4"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {products.map((product) => (
+              <Link key={product._id} href={`/product/${product._id}`}>
+                <Card className="overflow-hidden hover:shadow-xl hover:border-accent transition duration-300 h-full flex flex-col bg-card">
+                  <div className="relative w-full h-48 bg-secondary overflow-hidden group">
+                    <img
+                      src={product.images[0] || "/placeholder.svg"}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                    />
+                    {product.discount > 0 && (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        {product.discount}% OFF
                       </div>
-                      <span className="text-xs text-muted-foreground">({product.reviews})</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-base md:text-lg font-bold text-primary">₹{product.price}</span>
-                    {product.originalPrice && (
-                      <span className="text-xs md:text-sm text-muted-foreground line-through">
-                        ₹{product.originalPrice}
-                      </span>
+                    )}
+                    {category === 'new-arrivals' && (
+                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        NEW
+                      </div>
                     )}
                   </div>
 
-                  <Button 
-                    className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm mt-auto flex items-center gap-2 justify-center"
-                    suppressHydrationWarning
-                  >
-                    <ShoppingCart size={16} />
-                    Add to Cart
-                  </Button>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+                  <div className="p-3 md:p-4 flex-1 flex flex-col">
+                    <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-2">{product.name}</h3>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-base md:text-lg font-bold text-primary">₹{product.price}</span>
+                      {product.discount > 0 && (
+                        <span className="text-xs md:text-sm text-muted-foreground line-through">
+                          ₹{Math.round(product.price / (1 - product.discount / 100))}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-xs text-gray-500 mb-3">Stock: {product.stock}</div>
+
+                    <Button 
+                      className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm mt-auto flex items-center gap-2 justify-center"
+                      suppressHydrationWarning
+                    >
+                      <ShoppingCart size={16} />
+                      Add to Cart
+                    </Button>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )
