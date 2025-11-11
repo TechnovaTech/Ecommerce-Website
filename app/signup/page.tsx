@@ -31,10 +31,31 @@ export default function SignupPage() {
       return
     }
     setIsLoading(true)
-    setTimeout(() => {
+    
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        alert("Account created successfully!")
+        setFormData({ fullName: "", email: "", password: "", confirmPassword: "" })
+      } else {
+        alert(data.error || "Failed to create account")
+      }
+    } catch (error) {
+      alert("Failed to create account")
+    } finally {
       setIsLoading(false)
-      alert("Account created successfully!")
-    }, 1000)
+    }
   }
 
   return (
