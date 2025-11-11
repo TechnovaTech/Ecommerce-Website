@@ -191,17 +191,28 @@ export default function CategoriesPage() {
                   <form onSubmit={async (e) => {
                     e.preventDefault()
                     try {
-                      await fetch('/api/subcategories', {
+                      console.log('Submitting subcategory:', { name: subCategoryName, parentCategory: selectedCategory })
+                      const response = await fetch('/api/subcategories', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ name: subCategoryName, parentCategory: selectedCategory })
                       })
-                      fetchCategories()
-                      setShowSubForm(false)
-                      setSubCategoryName('')
-                      setSelectedCategory('')
+                      
+                      const result = await response.json()
+                      console.log('Subcategory response:', result)
+                      
+                      if (response.ok) {
+                        alert('Subcategory created successfully!')
+                        fetchCategories()
+                        setShowSubForm(false)
+                        setSubCategoryName('')
+                        setSelectedCategory('')
+                      } else {
+                        alert('Error: ' + result.error)
+                      }
                     } catch (error) {
-                      console.error('Failed to save subcategory')
+                      console.error('Failed to save subcategory:', error)
+                      alert('Network error: Failed to save subcategory')
                     }
                   }} className="space-y-4">
                     <div>
@@ -214,7 +225,7 @@ export default function CategoriesPage() {
                       >
                         <option value="">Select Category</option>
                         {categories.map((cat) => (
-                          <option key={cat._id} value={cat._id}>{cat.name}</option>
+                          <option key={cat._id} value={cat.name}>{cat.name}</option>
                         ))}
                       </select>
                     </div>
@@ -260,7 +271,7 @@ export default function CategoriesPage() {
                         <td className="py-3">
                           <div className="flex flex-wrap gap-1">
                             {subcategories
-                              .filter(sub => sub.parentCategory === category._id)
+                              .filter(sub => sub.parentCategory === category.name)
                               .map(sub => (
                                 <span key={sub._id} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
                                   {sub.name}
