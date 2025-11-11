@@ -203,7 +203,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {relatedProducts.map((relatedProduct) => (
                 <Link key={relatedProduct._id} href={`/product/${relatedProduct._id}`}>
                   <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer">
-                    <div className="relative w-full h-48 bg-gray-100">
+                    <div className="relative aspect-square bg-gray-100">
                       <img
                         src={relatedProduct.images[0] || "/placeholder.svg"}
                         alt={relatedProduct.name}
