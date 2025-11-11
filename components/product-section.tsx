@@ -193,7 +193,10 @@ export default function ProductSection({ title, category, link }: ProductSection
                     )}
                   </div>
 
-                  <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm mt-auto flex items-center gap-2 justify-center">
+                  <Button 
+                    className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm mt-auto flex items-center gap-2 justify-center"
+                    suppressHydrationWarning
+                  >
                     <ShoppingCart size={16} />
                     Add to Cart
                   </Button>

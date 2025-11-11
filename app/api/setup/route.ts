@@ -17,6 +17,22 @@ export async function POST() {
     await db.createCollection('categories').catch(() => {})
     await db.createCollection('orders').catch(() => {})
     
+    // Add default categories if none exist
+    const categoriesCollection = db.collection('categories')
+    const categoryCount = await categoriesCollection.countDocuments()
+    
+    if (categoryCount === 0) {
+      const defaultCategories = [
+        { name: 'Home & Kitchen', status: 'active', image: '/kitchen-organizer.png', createdAt: new Date() },
+        { name: 'Electronics', status: 'active', image: '/phone-stand.jpg', createdAt: new Date() },
+        { name: 'Fashion', status: 'active', image: '/placeholder.jpg', createdAt: new Date() },
+        { name: 'Sports & Fitness', status: 'active', image: '/placeholder.jpg', createdAt: new Date() },
+        { name: 'Beauty & Personal Care', status: 'active', image: '/jewelry-box-organizer.jpg', createdAt: new Date() },
+        { name: 'Books & Stationery', status: 'active', image: '/placeholder.jpg', createdAt: new Date() }
+      ]
+      await categoriesCollection.insertMany(defaultCategories)
+    }
+    
     const admins = db.collection('admins')
     
     const existingAdmin = await admins.findOne({ email: 'admin@shukanmall.com' })

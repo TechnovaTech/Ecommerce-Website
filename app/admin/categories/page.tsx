@@ -10,6 +10,7 @@ interface Category {
   _id?: string
   name: string
   status: string
+  image?: string
   products?: number
   subcategories?: string[]
 }
@@ -28,6 +29,7 @@ export default function CategoriesPage() {
   const [formData, setFormData] = useState<Category>({
     name: '',
     status: 'active',
+    image: '',
     subcategories: []
   })
   const [showSubForm, setShowSubForm] = useState(false)
@@ -66,20 +68,37 @@ export default function CategoriesPage() {
     e.preventDefault()
     try {
       const method = editingCategory ? 'PUT' : 'POST'
-      const body = editingCategory ? { ...formData, id: editingCategory._id } : formData
       
-      await fetch('/api/categories', {
+      const categoryData = {
+        name: formData.name,
+        status: formData.status,
+        image: formData.image || ''
+      }
+      
+      const body = editingCategory ? { ...categoryData, id: editingCategory._id } : categoryData
+      
+      console.log('Submitting:', method, body)
+      
+      const response = await fetch('/api/categories', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
       
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('API Error:', error)
+        alert('Error: ' + error.error)
+        return
+      }
+      
       fetchCategories()
       setShowForm(false)
       setEditingCategory(null)
-      setFormData({ name: '', status: 'active', subcategories: [] })
+      setFormData({ name: '', status: 'active', image: '', subcategories: [] })
     } catch (error) {
-      console.error('Failed to save category')
+      console.error('Failed to save category:', error)
+      alert('Failed to save category')
     }
   }
 
@@ -134,6 +153,18 @@ export default function CategoriesPage() {
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Category Image URL</label>
+                      <Input
+                        type="url"
+                        placeholder="/image.jpg or https://example.com/image.jpg"
+                        value={formData.image || ''}
+                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      />
+                      {formData.image && (
+                        <img src={formData.image} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded" onError={(e) => e.currentTarget.style.display = 'none'} />
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button type="submit">{editingCategory ? 'Update' : 'Create'} Category</Button>
@@ -200,6 +231,7 @@ export default function CategoriesPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
+                      <th className="text-left py-3">Image</th>
                       <th className="text-left py-3">Name</th>
                       <th className="text-left py-3">Subcategories</th>
                       <th className="text-left py-3">Actions</th>
@@ -208,6 +240,13 @@ export default function CategoriesPage() {
                   <tbody>
                     {categories.map((category) => (
                       <tr key={category._id} className="border-b">
+                        <td className="py-3">
+                          <img 
+                            src={category.image || '/placeholder.svg'} 
+                            alt={category.name} 
+                            className="w-12 h-12 object-cover rounded" 
+                          />
+                        </td>
                         <td className="py-3 font-medium">{category.name}</td>
                         <td className="py-3">
                           <div className="flex flex-wrap gap-1">
