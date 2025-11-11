@@ -58,6 +58,7 @@ export default function HeroCarousel() {
         onClick={prev}
         aria-label="Previous slide"
         className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2 z-10 bg-white/70 hover:bg-white text-foreground rounded-full p-2 md:p-3 transition"
+        suppressHydrationWarning
       >
         <ChevronLeft size={24} />
       </button>
@@ -65,6 +66,7 @@ export default function HeroCarousel() {
         onClick={next}
         aria-label="Next slide"
         className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 z-10 bg-white/70 hover:bg-white text-foreground rounded-full p-2 md:p-3 transition"
+        suppressHydrationWarning
       >
         <ChevronRight size={24} />
       </button>
@@ -77,6 +79,7 @@ export default function HeroCarousel() {
             onClick={() => setCurrent(index)}
             aria-label={`Go to slide ${index + 1}`}
             className={`w-3 h-3 rounded-full transition ${index === current ? "bg-white" : "bg-white/50"}`}
+            suppressHydrationWarning
           />
         ))}
       </div>

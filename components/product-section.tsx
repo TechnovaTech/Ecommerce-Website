@@ -67,10 +67,22 @@ export default function ProductSection({ title, category, link }: ProductSection
   return (
     <section className="py-12 md:py-16 bg-background">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8 md:mb-10">
-          <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">{title}</h2>
-          </div>
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-black mb-4 tracking-tight">
+            {title.split(' ').map((word, index) => (
+              index === title.split(' ').length - 1 ? (
+                <span key={index} className="text-4xl md:text-5xl font-bold text-red-700 mb-4 tracking-tight">{word}</span>
+              ) : (
+                <span key={index}>{word} </span>
+              )
+            ))}
+          </h2>
+          <div className="w-24 h-1 bg-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">
+            {category === 'new-arrivals' ? 'Latest products just for you' : 'Most popular items'}
+          </p>
+        </div>
+        <div className="flex justify-end mb-8">
           <Link href={link} className="text-primary hover:text-accent font-semibold text-sm md:text-base transition">
             See All →
           </Link>

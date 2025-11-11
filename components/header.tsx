@@ -84,7 +84,7 @@ export default function Header() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-48 rounded-l-md border-orange-600"
                 />
-                <button className="text-white px-3 rounded-r-md bg-orange-600 hover:bg-orange-700 transition-colors">
+                <button className="text-white px-3 rounded-r-md bg-orange-600 hover:bg-orange-700 transition-colors" suppressHydrationWarning>
                   <Search size={16} />
                 </button>
               </div>
