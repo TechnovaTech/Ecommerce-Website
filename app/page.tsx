@@ -12,7 +12,7 @@ export default function Home() {
       <main>
         <HeroCarousel />
         <CategoriesGrid />
-        <BannerSection />
+        {/* <BannerSection /> */}
         <ProductSection title="Top Deals" category="top-deals" link="/deals" />
         <ProductSection title="Hot Selling" category="hot-selling" link="/hot-selling" />
       </main>

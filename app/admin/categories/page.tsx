@@ -155,15 +155,24 @@ export default function CategoriesPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Category Image URL</label>
-                      <Input
-                        type="url"
-                        placeholder="/image.jpg or https://example.com/image.jpg"
-                        value={formData.image || ''}
-                        onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      <label className="block text-sm font-medium mb-2">Category Image</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              setFormData({ ...formData, image: event.target?.result as string })
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                        className="w-full p-2 border rounded"
                       />
                       {formData.image && (
-                        <img src={formData.image} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded" onError={(e) => e.currentTarget.style.display = 'none'} />
+                        <img src={formData.image} alt="Preview" className="mt-2 w-20 h-20 object-cover rounded" />
                       )}
                     </div>
                     <div className="flex gap-2">
