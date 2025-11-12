@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Heart, ShoppingCart, Trash2 } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 interface WishlistItem {
   _id: string
@@ -19,6 +20,7 @@ interface WishlistItem {
 }
 
 export default function WishlistPage() {
+  const { toast } = useToast()
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -63,9 +65,26 @@ export default function WishlistPage() {
 
       if (response.ok) {
         fetchWishlist()
+        toast({
+          title: "✅ Removed from Wishlist",
+          description: "Item has been removed from your wishlist.",
+          duration: 3000,
+        })
+      } else {
+        toast({
+          title: "❌ Removal Failed",
+          description: "Failed to remove item from wishlist. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      console.error('Failed to remove from wishlist')
+      toast({
+        title: "❌ Removal Failed",
+        description: "An error occurred while removing the item. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -85,12 +104,26 @@ export default function WishlistPage() {
       })
 
       if (response.ok) {
-        alert('Added to cart!')
+        toast({
+          title: "🛍️ Added to Cart!",
+          description: "Item has been successfully added to your cart.",
+          duration: 3000,
+        })
       } else {
-        alert('Failed to add to cart')
+        toast({
+          title: "❌ Failed to Add",
+          description: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert('Failed to add to cart')
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to cart. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 

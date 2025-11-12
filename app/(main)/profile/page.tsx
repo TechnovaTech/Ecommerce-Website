@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { User, Package, MapPin, Eye } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { User, Package, MapPin, Eye, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 interface UserProfile {
   _id: string
@@ -39,11 +41,13 @@ interface Order {
 }
 
 export default function ProfilePage() {
+  const { toast } = useToast()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -114,7 +118,12 @@ export default function ProfilePage() {
 
   const updateProfile = async () => {
     if (!formData.name.trim()) {
-      alert('Name is required')
+      toast({
+        title: "⚠️ Validation Error",
+        description: "Name is required to update your profile.",
+        variant: "destructive",
+        duration: 3000,
+      })
       return
     }
 
@@ -142,13 +151,28 @@ export default function ProfilePage() {
       if (response.ok) {
         await fetchProfile()
         setEditing(false)
-        alert('Profile updated successfully')
+        setShowSuccessPopup(true)
+        toast({
+          title: "✅ Profile Updated Successfully!",
+          description: "Your profile information has been saved successfully.",
+          duration: 4000,
+        })
       } else {
         const error = await response.json()
-        alert(error.error || 'Failed to update profile')
+        toast({
+          title: "❌ Update Failed",
+          description: error.error || 'Failed to update profile. Please try again.',
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert('Failed to update profile')
+      toast({
+        title: "❌ Update Failed",
+        description: "An error occurred while updating your profile. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -395,6 +419,24 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+      
+      {/* Success Popup */}
+      <Dialog open={showSuccessPopup} onOpenChange={setShowSuccessPopup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="w-6 h-6" />
+              Success!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4">
+            <p className="text-gray-600 mb-4">Your profile has been updated successfully!</p>
+            <Button onClick={() => setShowSuccessPopup(false)} className="bg-green-600 hover:bg-green-700">
+              OK
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
