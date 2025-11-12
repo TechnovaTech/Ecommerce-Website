@@ -146,7 +146,7 @@ export default function CartPage() {
       window.location.href = '/login'
       return
     }
-    setShowCheckout(true)
+    window.location.href = '/checkout'
   }
 
   const placeOrder = async () => {
