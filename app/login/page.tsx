@@ -118,7 +118,7 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <Button type="submit" disabled={isLoading}  className="w-full text-white" style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}>
+            <Button type="submit" disabled={isLoading} className="w-full text-white" style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}} suppressHydrationWarning>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
           </form>
