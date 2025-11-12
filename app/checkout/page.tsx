@@ -22,6 +22,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true)
   const [paymentMethod, setPaymentMethod] = useState('cod')
   const [shippingAddress, setShippingAddress] = useState({
+    name: '',
     street: '',
     city: '',
     state: '',
@@ -63,7 +64,7 @@ export default function CheckoutPage() {
   const total = subtotal + shipping + tax
 
   const placeOrder = async () => {
-    if (!shippingAddress.street || !shippingAddress.city) {
+    if (!shippingAddress.name || !shippingAddress.street || !shippingAddress.city) {
       return
     }
 
@@ -131,6 +132,17 @@ export default function CheckoutPage() {
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Delivery Address</h2>
               <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    className="w-full p-3 border rounded-lg"
+                    placeholder="Enter your full name"
+                    value={shippingAddress.name}
+                    onChange={(e) => setShippingAddress({...shippingAddress, name: e.target.value})}
+                    required
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Street Address *</label>
                   <input
@@ -264,7 +276,7 @@ export default function CheckoutPage() {
               <Button 
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3"
                 onClick={placeOrder}
-                disabled={processing || !shippingAddress.street || !shippingAddress.city}
+                disabled={processing || !shippingAddress.name || !shippingAddress.street || !shippingAddress.city}
               >
                 {processing ? 'Processing...' : `Place Order - ₹${total.toFixed(0)}`}
               </Button>
