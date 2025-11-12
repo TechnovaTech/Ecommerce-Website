@@ -15,8 +15,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, parentCategory } = await request.json()
-    console.log('Creating subcategory:', { name, parentCategory })
+    const { name, parentCategory, image } = await request.json()
+    console.log('Creating subcategory:', { name, parentCategory, image })
     
     const client = await clientPromise
     const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const subcategory = {
       name,
       parentCategory,
+      image: image || '',
       createdAt: new Date(),
       updatedAt: new Date()
     }

@@ -12,6 +12,9 @@ export default function Header() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const [wishlistCount, setWishlistCount] = useState(0)
+  const [categories, setCategories] = useState<any[]>([])
+  const [subcategories, setSubcategories] = useState<any[]>([])
+  const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false)
 
   const brandColor = "#d97706" // Converting lab color to hex equivalent
 
@@ -24,6 +27,9 @@ export default function Header() {
       fetchCartCount()
       fetchWishlistCount()
     }
+    // Fetch categories and subcategories
+    fetchCategories()
+    fetchSubcategories()
   }, [])
 
   const fetchUserData = async () => {
@@ -75,6 +81,30 @@ export default function Header() {
     }
   }
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error)
+    }
+  }
+
+  const fetchSubcategories = async () => {
+    try {
+      const response = await fetch('/api/subcategories')
+      if (response.ok) {
+        const data = await response.json()
+        setSubcategories(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch subcategories:', error)
+    }
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     setUser(null)
@@ -118,14 +148,62 @@ export default function Header() {
               >
                 Home
               </Link>
-              <Link 
-                href="/products" 
-                className="text-sm font-medium hover:text-orange-600 transition-colors" 
-                onMouseEnter={handleMouseEnter} 
-                onMouseLeave={handleMouseLeave}
-              >
-                Products
-              </Link>
+              {/* Products with Categories Dropdown */}
+              <div className="relative">
+                <button 
+                  onMouseEnter={() => setShowCategoriesDropdown(true)}
+                  onMouseLeave={() => setShowCategoriesDropdown(false)}
+                  className="flex items-center gap-1 text-sm font-medium hover:text-orange-600 transition-colors"
+                >
+                  Products
+                  <ChevronDown size={14} />
+                </button>
+                
+                {showCategoriesDropdown && (
+                  <div 
+                    className="absolute left-0 top-full mt-2 w-[600px] bg-white border border-gray-200 rounded-lg shadow-xl z-50"
+                    onMouseEnter={() => setShowCategoriesDropdown(true)}
+                    onMouseLeave={() => setShowCategoriesDropdown(false)}
+                  >
+                    <div className="p-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        {categories.map((category) => (
+                          <div key={category._id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                            <Link 
+                              href={`/category/${category.name}`}
+                              className="flex items-center gap-3 text-sm font-semibold text-gray-900 hover:text-orange-600 mb-3"
+                              onClick={() => setShowCategoriesDropdown(false)}
+                            >
+                              {category.image && (
+                                <img src={category.image} alt={category.name} className="w-8 h-8 object-cover rounded-lg" />
+                              )}
+                              {category.name}
+                            </Link>
+                            <div className="space-y-2">
+                              {subcategories
+                                .filter(sub => sub.parentCategory === category.name)
+                                .map(subcategory => (
+                                  <Link 
+                                    key={subcategory._id}
+                                    href={`/products?subcategory=${encodeURIComponent(subcategory.name)}`}
+                                    className="flex items-center gap-2 text-xs text-gray-600 hover:text-orange-600 block pl-2"
+                                    onClick={() => setShowCategoriesDropdown(false)}
+                                  >
+                                    {subcategory.image && (
+                                      <img src={subcategory.image} alt={subcategory.name} className="w-4 h-4 object-cover rounded" />
+                                    )}
+                                    {subcategory.name}
+                                  </Link>
+                                ))
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <Link 
                 href="/category/E-Commerce-Product-Supplier" 
                 className="text-sm font-medium hover:text-orange-600 transition-colors" 
