@@ -5,12 +5,8 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Heart } from "lucide-react"
-<<<<<<< HEAD
-import { useToast } from "@/hooks/use-toast"
-=======
 import { useCart } from "@/lib/cart-context"
 import { useWishlist } from "@/lib/wishlist-context"
->>>>>>> 71d9819bf70364f4b956598180802b6d9bcf7336
 
 interface Product {
   _id: string
@@ -32,7 +28,6 @@ interface ProductSectionProps {
 }
 
 export default function ProductSection({ title, category, link }: ProductSectionProps) {
-  const { toast } = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const { updateCartCount } = useCart()
@@ -77,16 +72,7 @@ export default function ProductSection({ title, category, link }: ProductSection
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-<<<<<<< HEAD
-        toast({
-          title: "🔒 Login Required",
-          description: "Please login to add items to your cart.",
-          variant: "destructive",
-          duration: 3000,
-        })
-=======
         window.location.href = '/login'
->>>>>>> 71d9819bf70364f4b956598180802b6d9bcf7336
         return
       }
 
@@ -103,33 +89,10 @@ export default function ProductSection({ title, category, link }: ProductSection
       })
 
       if (response.ok) {
-<<<<<<< HEAD
-        toast({
-          title: "🛍️ Added to Cart!",
-          description: `${product.name} has been added to your cart.`,
-          duration: 3000,
-        })
-      } else {
-        toast({
-          title: "❌ Failed to Add",
-          description: "Failed to add item to cart. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "❌ Failed to Add",
-        description: "An error occurred while adding to cart. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      })
-=======
         updateCartCount()
       }
     } catch (error) {
       console.error('Failed to add to cart')
->>>>>>> 71d9819bf70364f4b956598180802b6d9bcf7336
     }
   }
 
@@ -137,16 +100,7 @@ export default function ProductSection({ title, category, link }: ProductSection
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-<<<<<<< HEAD
-        toast({
-          title: "🔒 Login Required",
-          description: "Please login to add items to your wishlist.",
-          variant: "destructive",
-          duration: 3000,
-        })
-=======
         window.location.href = '/login'
->>>>>>> 71d9819bf70364f4b956598180802b6d9bcf7336
         return
       }
 
@@ -162,33 +116,10 @@ export default function ProductSection({ title, category, link }: ProductSection
       })
 
       if (response.ok) {
-<<<<<<< HEAD
-        toast({
-          title: "❤️ Added to Wishlist!",
-          description: `${product.name} has been added to your wishlist.`,
-          duration: 3000,
-        })
-      } else {
-        toast({
-          title: "❌ Failed to Add",
-          description: "Failed to add item to wishlist. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "❌ Failed to Add",
-        description: "An error occurred while adding to wishlist. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      })
-=======
         updateWishlistCount()
       }
     } catch (error) {
       console.error('Failed to add to wishlist')
->>>>>>> 71d9819bf70364f4b956598180802b6d9bcf7336
     }
   }
 
@@ -229,7 +160,8 @@ export default function ProductSection({ title, category, link }: ProductSection
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {products.map((product) => (
-              <Card key={product._id} className="overflow-hidden hover:shadow-xl hover:border-accent transition duration-300 h-full flex flex-col bg-card cursor-pointer" onClick={() => window.location.href = `/product/${product._id}`}>
+              <Link key={product._id} href={`/product/${product._id}`}>
+                <Card className="overflow-hidden hover:shadow-xl hover:border-accent transition duration-300 h-full flex flex-col bg-card">
                   <div className="relative w-full h-48 bg-secondary overflow-hidden group">
                     <img
                       src={product.images[0] || "/placeholder.svg"}
@@ -287,6 +219,7 @@ export default function ProductSection({ title, category, link }: ProductSection
                     </div>
                   </div>
                 </Card>
+              </Link>
             ))}
           </div>
         )}
