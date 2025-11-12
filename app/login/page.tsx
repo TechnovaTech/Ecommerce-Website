@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -33,6 +35,11 @@ export default function LoginPage() {
       
       if (response.ok) {
         localStorage.setItem('token', data.token)
+        toast({
+          title: "🎉 Login Successful!",
+          description: `Welcome back, ${data.user?.name || 'User'}!`,
+          duration: 3000,
+        })
         if (data.user?.isAdmin) {
           localStorage.setItem('adminLoggedIn', 'true')
           console.log('Redirecting to admin')
@@ -42,11 +49,21 @@ export default function LoginPage() {
           router.push('/')
         }
       } else {
-        alert(data.error || 'Invalid credentials')
+        toast({
+          title: "❌ Login Failed",
+          description: data.error || 'Invalid email or password. Please try again.',
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert('Login failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      toast({
+        title: "❌ Login Failed",
+        description: 'An error occurred during login. Please try again.',
+        variant: "destructive",
+        duration: 3000,
+      })
     }
     
     setIsLoading(false)

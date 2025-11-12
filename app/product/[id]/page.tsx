@@ -8,6 +8,7 @@ import { Heart, ShoppingCart, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { useToast } from "@/hooks/use-toast"
 
 
 interface Product {
@@ -24,6 +25,7 @@ interface Product {
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
+  const { toast } = useToast()
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,7 +78,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('Please login to add items to cart')
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to add items to your cart.",
+          variant: "destructive",
+          duration: 3000,
+        })
         return
       }
 
@@ -93,12 +100,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       })
 
       if (response.ok) {
-        alert(`Added ${quantity} item(s) to cart!`)
+        toast({
+          title: "🛍️ Added to Cart!",
+          description: `Successfully added ${quantity} item(s) to your cart.`,
+          duration: 3000,
+        })
       } else {
-        alert('Failed to add to cart')
+        toast({
+          title: "❌ Failed to Add",
+          description: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert('Failed to add to cart')
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to cart. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -106,7 +127,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('Please login to manage wishlist')
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to manage your wishlist.",
+          variant: "destructive",
+          duration: 3000,
+        })
         return
       }
 
@@ -124,12 +150,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
       if (response.ok) {
         setIsInWishlist(!isInWishlist)
-        alert(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist!')
+        toast({
+          title: isInWishlist ? "❤️ Removed from Wishlist" : "❤️ Added to Wishlist!",
+          description: isInWishlist ? "Item removed from your wishlist." : "Item added to your wishlist successfully.",
+          duration: 3000,
+        })
       } else {
-        alert('Failed to update wishlist')
+        toast({
+          title: "❌ Wishlist Update Failed",
+          description: "Failed to update wishlist. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert('Failed to update wishlist')
+      toast({
+        title: "❌ Wishlist Update Failed",
+        description: "An error occurred while updating wishlist. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -143,7 +183,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('Please login to add items to cart')
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to add items to your cart.",
+          variant: "destructive",
+          duration: 3000,
+        })
         return
       }
 
@@ -160,12 +205,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       })
 
       if (response.ok) {
-        alert('Added to cart!')
+        toast({
+          title: "🛍️ Added to Cart!",
+          description: `${relatedProduct.name} has been added to your cart.`,
+          duration: 3000,
+        })
       } else {
-        alert('Failed to add to cart')
+        toast({
+          title: "❌ Failed to Add",
+          description: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert('Failed to add to cart')
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to cart. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -173,7 +232,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('Please login to add items to wishlist')
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to add items to your wishlist.",
+          variant: "destructive",
+          duration: 3000,
+        })
         return
       }
 
@@ -189,12 +253,26 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       })
 
       if (response.ok) {
-        alert('Added to wishlist!')
+        toast({
+          title: "❤️ Added to Wishlist!",
+          description: `${relatedProduct.name} has been added to your wishlist.`,
+          duration: 3000,
+        })
       } else {
-        alert('Failed to add to wishlist')
+        toast({
+          title: "❌ Failed to Add",
+          description: "Failed to add item to wishlist. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert('Failed to add to wishlist')
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to wishlist. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 

@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function SignupPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -29,7 +31,12 @@ export default function SignupPage() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!")
+      toast({
+        title: "⚠️ Password Mismatch",
+        description: "Passwords do not match. Please check and try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
       return
     }
     setIsLoading(true)
@@ -62,15 +69,35 @@ export default function SignupPage() {
         
         if (loginResponse.ok) {
           localStorage.setItem('token', loginData.token)
+          toast({
+            title: "🎉 Account Created Successfully!",
+            description: "Welcome to Shukan Mall! You are now logged in.",
+            duration: 4000,
+          })
           router.push('/')
         } else {
-          alert("Account created but login failed. Please login manually.")
+          toast({
+            title: "✅ Account Created",
+            description: "Account created successfully! Please login manually.",
+            duration: 4000,
+          })
+          router.push('/login')
         }
       } else {
-        alert(data.error || "Failed to create account")
+        toast({
+          title: "❌ Signup Failed",
+          description: data.error || "Failed to create account. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      alert("Failed to create account")
+      toast({
+        title: "❌ Signup Failed",
+        description: "An error occurred while creating your account. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     } finally {
       setIsLoading(false)
     }
