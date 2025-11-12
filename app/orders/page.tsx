@@ -261,7 +261,7 @@ export default function OrdersPage() {
               onChange={(e) => setTrackingNumber(e.target.value)}
               className="flex-1"
             />
-            <Button onClick={trackOrder} className="bg-teal-600 hover:bg-teal-700 text-white">Track Order</Button>
+            <Button onClick={trackOrder} className="bg-teal-600 hover:bg-teal-700 text-white" suppressHydrationWarning>Track Order</Button>
           </div>
           
           {trackingResult && (
@@ -290,7 +290,7 @@ export default function OrdersPage() {
       {/* Orders List */}
       <div className="space-y-6">
         {orders.map((order) => (
-          <Card key={order._id} className="p-6 bg-white shadow-sm border hover:shadow-md transition-shadow">
+          <Card key={order._id} className="p-6 bg-white shadow-sm border hover:shadow-lg hover:border-teal-300 transition-all duration-200">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
@@ -329,7 +329,7 @@ export default function OrdersPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-teal-200 text-teal-700 hover:bg-teal-50"
+                className="border-teal-200 text-teal-700 hover:bg-teal-100 hover:border-teal-400 hover:text-teal-800"
                 onClick={() => {
                   setSelectedOrder(order)
                   setShowDetails(true)
@@ -342,6 +342,7 @@ export default function OrdersPage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="hover:bg-gray-100 hover:border-gray-400"
                 onClick={() => downloadInvoice(order._id)}
               >
                 <FileText className="w-4 h-4 mr-2" />
@@ -352,6 +353,7 @@ export default function OrdersPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="hover:bg-red-50 hover:border-red-300 hover:text-red-700"
                   onClick={() => {
                     setSelectedOrder(order)
                     setShowCancelModal(true)
@@ -366,6 +368,7 @@ export default function OrdersPage() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
                   onClick={() => {
                     setSelectedOrder(order)
                     setShowReturnModal(true)
@@ -382,8 +385,8 @@ export default function OrdersPage() {
 
       {/* Order Details Modal */}
       {showDetails && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-4xl m-4 p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: '#000000a8'}}>
+          <Card className="w-full max-w-4xl m-4 mt-8 p-6 max-h-[85vh] overflow-y-auto scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">Order Details</h2>
               <Button variant="outline" onClick={() => setShowDetails(false)}>
@@ -481,8 +484,8 @@ export default function OrdersPage() {
 
       {/* Cancel Order Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md m-4 p-6">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: '#000000a8'}}>
+          <Card className="w-full max-w-md m-4 mt-8 p-6">
             <h3 className="text-lg font-semibold mb-4">Cancel Order</h3>
             <p className="text-sm text-gray-600 mb-4">
               Please provide a reason for cancelling this order:
@@ -507,8 +510,8 @@ export default function OrdersPage() {
 
       {/* Return Order Modal */}
       {showReturnModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md m-4 p-6">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: '#000000a8'}}>
+          <Card className="w-full max-w-md m-4 mt-8 p-6">
             <h3 className="text-lg font-semibold mb-4">Request Return</h3>
             <p className="text-sm text-gray-600 mb-4">
               Please provide a reason for returning this order:

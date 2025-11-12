@@ -154,6 +154,7 @@ export default function Header() {
                   onMouseEnter={() => setShowCategoriesDropdown(true)}
                   onMouseLeave={() => setShowCategoriesDropdown(false)}
                   className="flex items-center gap-1 text-sm font-medium hover:text-orange-600 transition-colors"
+                  suppressHydrationWarning
                 >
                   Products
                   <ChevronDown size={14} />
@@ -247,6 +248,7 @@ export default function Header() {
                   <button 
                     onClick={() => setShowProfileDropdown(!showProfileDropdown)}
                     className="flex items-center gap-2 text-orange-600 hover:opacity-80 transition-opacity"
+                    suppressHydrationWarning
                   >
                     <User size={18} />
                     <span className="text-sm font-semibold">{user.fullName || user.email}</span>
@@ -277,6 +279,7 @@ export default function Header() {
                         <button 
                           onClick={handleLogout}
                           className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          suppressHydrationWarning
                         >
                           Logout
                         </button>

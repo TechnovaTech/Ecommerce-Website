@@ -17,6 +17,7 @@ export default function RealTimeNotifications() {
         size="sm"
         onClick={() => setShowNotifications(!showNotifications)}
         className="relative"
+        suppressHydrationWarning
       >
         <Bell size={20} />
         {notifications.length > 0 && (
@@ -30,7 +31,7 @@ export default function RealTimeNotifications() {
         <Card className="absolute right-0 top-12 w-80 max-h-96 overflow-y-auto z-50 p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Live Updates</h3>
-            <Button variant="ghost" size="sm" onClick={() => setShowNotifications(false)}>
+            <Button variant="ghost" size="sm" onClick={() => setShowNotifications(false)} suppressHydrationWarning>
               <X size={16} />
             </Button>
           </div>
