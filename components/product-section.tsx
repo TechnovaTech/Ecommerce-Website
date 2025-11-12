@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Heart } from "lucide-react"
 
 interface Product {
   _id: string
@@ -61,6 +61,65 @@ export default function ProductSection({ title, category, link }: ProductSection
       console.error('Failed to fetch products')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const addToCart = async (product: Product) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please login to add items to cart')
+        return
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity: 1
+        })
+      })
+
+      if (response.ok) {
+        alert('Added to cart!')
+      } else {
+        alert('Failed to add to cart')
+      }
+    } catch (error) {
+      alert('Failed to add to cart')
+    }
+  }
+
+  const addToWishlist = async (product: Product) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please login to add items to wishlist')
+        return
+      }
+
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id
+        })
+      })
+
+      if (response.ok) {
+        alert('Added to wishlist!')
+      } else {
+        alert('Failed to add to wishlist')
+      }
+    } catch (error) {
+      alert('Failed to add to wishlist')
     }
   }
 
@@ -135,13 +194,29 @@ export default function ProductSection({ title, category, link }: ProductSection
 
                     <div className="text-xs text-gray-500 mb-3">Stock: {product.stock}</div>
 
-                    <Button 
-                      className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm mt-auto flex items-center gap-2 justify-center"
-                      suppressHydrationWarning
-                    >
-                      <ShoppingCart size={16} />
-                      Add to Cart
-                    </Button>
+                    <div className="flex gap-2 mt-auto">
+                      <Button 
+                        className="flex-1 bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm flex items-center gap-1 justify-center"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          addToCart(product)
+                        }}
+                      >
+                        <ShoppingCart size={14} />
+                        Cart
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        className="px-2"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          addToWishlist(product)
+                        }}
+                      >
+                        <Heart size={14} />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               </Link>

@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MongoClient } from 'mongodb'
+import clientPromise from '@/lib/mongodb'
 import bcrypt from 'bcryptjs'
-
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017'
-const dbName = process.env.DATABASE_NAME || 'shukanmall'
+import { requireAdmin } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
     const { fullName, email, password } = await request.json()
     
-    const client = new MongoClient(uri)
-    await client.connect()
-    const db = client.db(dbName)
+    const client = await clientPromise
+    const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
     
     // Check if user already exists
     const existingUser = await db.collection('users').findOne({ email })
     if (existingUser) {
-      await client.close()
       return NextResponse.json({ error: 'User already exists' }, { status: 400 })
     }
     
@@ -34,7 +30,6 @@ export async function POST(request: NextRequest) {
     }
     
     const result = await db.collection('users').insertOne(user)
-    await client.close()
     
     return NextResponse.json({ 
       message: 'User created successfully',
@@ -45,19 +40,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const client = new MongoClient(uri)
-    await client.connect()
-    const db = client.db(dbName)
+    const client = await clientPromise
+    const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
     
     const users = await db.collection('users').find({}, {
-      projection: { password: 0 } // Exclude password from response
+      projection: { password: 0 }
     }).toArray()
     
-    await client.close()
     return NextResponse.json(users)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

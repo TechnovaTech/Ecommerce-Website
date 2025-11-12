@@ -34,6 +34,7 @@ export default function LoginPage() {
       if (response.ok) {
         localStorage.setItem('token', data.token)
         if (data.user?.isAdmin) {
+          localStorage.setItem('adminLoggedIn', 'true')
           console.log('Redirecting to admin')
           window.location.href = '/admin'
         } else {
@@ -45,7 +46,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Login error:', error)
-      alert('Login failed: ' + error.message)
+      alert('Login failed: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
     
     setIsLoading(false)
@@ -91,7 +92,7 @@ export default function LoginPage() {
               </a>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full text-white bg-teal-600 hover:bg-teal-700">
+            <Button type="submit" disabled={isLoading}  className="w-full text-white" style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
           </form>

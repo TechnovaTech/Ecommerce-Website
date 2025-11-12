@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Search, LogIn, ShoppingCart, User, ChevronDown } from "lucide-react"
+import { Search, LogIn, ShoppingCart, User, ChevronDown, Heart } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 
@@ -9,6 +9,8 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("")
   const [user, setUser] = useState<any>(null)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [cartCount, setCartCount] = useState(0)
+  const [wishlistCount, setWishlistCount] = useState(0)
 
   const brandColor = "#d97706" // Converting lab color to hex equivalent
 
@@ -18,6 +20,8 @@ export default function Header() {
     if (token) {
       // Fetch user data
       fetchUserData()
+      fetchCartCount()
+      fetchWishlistCount()
     }
   }, [])
 
@@ -34,6 +38,39 @@ export default function Header() {
       }
     } catch (error) {
       console.error('Failed to fetch user data:', error)
+    }
+  }
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await fetch('/api/cart', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        const count = data.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0
+        setCartCount(count)
+      }
+    } catch (error) {
+      console.error('Failed to fetch cart count:', error)
+    }
+  }
+
+  const fetchWishlistCount = async () => {
+    try {
+      const response = await fetch('/api/wishlist', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setWishlistCount(data.items?.length || 0)
+      }
+    } catch (error) {
+      console.error('Failed to fetch wishlist count:', error)
     }
   }
 
@@ -175,12 +212,24 @@ export default function Header() {
                 </Link>
               )}
 
+              {/* Wishlist */}
+              <Link href="/wishlist" className="relative">
+                <Heart size={22} className="text-orange-600 hover:opacity-80 transition-opacity" />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
               {/* Cart */}
               <Link href="/cart" className="relative">
                 <ShoppingCart size={22} className="text-orange-600 hover:opacity-80 transition-opacity" />
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  0
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             </div>
           </div>

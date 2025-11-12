@@ -3,6 +3,8 @@
 import { useState, useEffect, use } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Heart, ShoppingCart, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
@@ -26,6 +28,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
+  const [quantity, setQuantity] = useState(1)
+  const [isInWishlist, setIsInWishlist] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -65,6 +69,132 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       }
     } catch (error) {
       console.error('Failed to fetch related products:', error)
+    }
+  }
+
+  const addToCart = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please login to add items to cart')
+        return
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product?._id,
+          quantity: quantity
+        })
+      })
+
+      if (response.ok) {
+        alert(`Added ${quantity} item(s) to cart!`)
+      } else {
+        alert('Failed to add to cart')
+      }
+    } catch (error) {
+      alert('Failed to add to cart')
+    }
+  }
+
+  const toggleWishlist = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please login to manage wishlist')
+        return
+      }
+
+      const method = isInWishlist ? 'DELETE' : 'POST'
+      const response = await fetch('/api/wishlist', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product?._id
+        })
+      })
+
+      if (response.ok) {
+        setIsInWishlist(!isInWishlist)
+        alert(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist!')
+      } else {
+        alert('Failed to update wishlist')
+      }
+    } catch (error) {
+      alert('Failed to update wishlist')
+    }
+  }
+
+  const buyNow = async () => {
+    await addToCart()
+    // Redirect to cart or checkout
+    window.location.href = '/cart'
+  }
+
+  const addToCartRelated = async (relatedProduct: Product) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please login to add items to cart')
+        return
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: relatedProduct._id,
+          quantity: 1
+        })
+      })
+
+      if (response.ok) {
+        alert('Added to cart!')
+      } else {
+        alert('Failed to add to cart')
+      }
+    } catch (error) {
+      alert('Failed to add to cart')
+    }
+  }
+
+  const addToWishlistRelated = async (relatedProduct: Product) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('Please login to add items to wishlist')
+        return
+      }
+
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: relatedProduct._id
+        })
+      })
+
+      if (response.ok) {
+        alert('Added to wishlist!')
+      } else {
+        alert('Failed to add to wishlist')
+      }
+    } catch (error) {
+      alert('Failed to add to wishlist')
     }
   }
 
@@ -122,7 +252,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <img
                 src={product.images[selectedImage] || "/placeholder.svg"}
                 alt={product.name}
-                className="w-full h-96 object-cover rounded-lg"
+                className="w-full max-h-96 object-contain rounded-lg bg-gray-50"
               />
               {product.discount > 0 && (
                 <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded text-sm">
@@ -138,7 +268,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     src={img}
                     alt={`thumb-${i}`}
                     onClick={() => setSelectedImage(i)}
-                    className={`w-full h-16 object-cover rounded border-2 cursor-pointer hover:border-red-600 ${
+                    className={`w-full h-16 object-contain rounded border-2 cursor-pointer hover:border-red-600 bg-gray-50 ${
                       selectedImage === i ? 'border-red-600' : 'border-gray-200'
                     }`}
                   />
@@ -154,14 +284,19 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {/* Price Section */}
             <div className="mb-4">
               <div className="flex items-baseline gap-3 mb-2">
-                <span className="text-3xl font-bold text-red-600">₹{product.price}</span>
-                <span className="text-sm">/Pcs</span>
-                {product.discount > 0 && (
+                {product.discount > 0 ? (
                   <>
-                    <span className="text-lg text-gray-500 line-through">
+                    <span className="text-3xl font-bold text-red-600">₹{product.price}</span>
+                    <span className="text-sm">/Pcs</span>
+                    <span className="text-lg text-gray-500 line-through ml-2">
                       ₹{Math.round(product.price / (1 - product.discount / 100))}
                     </span>
-                    <span className="text-lg font-bold text-red-600">({product.discount}% Off)</span>
+                    <span className="text-lg font-bold text-red-600 ml-2">({product.discount}% Off)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-bold text-red-600">₹{product.price}</span>
+                    <span className="text-sm">/Pcs</span>
                   </>
                 )}
               </div>
@@ -175,12 +310,62 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <p className="text-sm"><strong>Status:</strong> {product.status}</p>
             </div>
 
+            {/* Quantity Selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Quantity:</label>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <Minus size={16} />
+                </Button>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 text-center"
+                  min="1"
+                  max={product.stock}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  disabled={quantity >= product.stock}
+                >
+                  <Plus size={16} />
+                </Button>
+                <span className="text-sm text-gray-600">Max: {product.stock}</span>
+              </div>
+            </div>
+
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-sm py-3 flex items-center gap-2 justify-center" suppressHydrationWarning>
-                🛒 Add To Cart
-              </Button>
-              <Button className="w-full bg-black hover:bg-gray-800 text-white text-sm py-3" suppressHydrationWarning>
+            <div className="space-y-3 mb-4">
+              <div className="flex gap-3">
+                <Button 
+                  className="flex-1 bg-primary hover:bg-accent text-primary-foreground text-sm py-3 flex items-center gap-2 justify-center"
+                  onClick={addToCart}
+                  disabled={product.stock === 0}
+                >
+                  <ShoppingCart size={16} />
+                  Add To Cart
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="px-4"
+                  onClick={toggleWishlist}
+                >
+                  <Heart size={16} className={isInWishlist ? 'fill-red-500 text-red-500' : ''} />
+                </Button>
+              </div>
+              <Button 
+                className="w-full bg-black hover:bg-gray-800 text-white text-sm py-3"
+                onClick={buyNow}
+                disabled={product.stock === 0}
+              >
                 ⚡ Buy Now
               </Button>
             </div>
@@ -221,15 +406,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg font-bold text-red-600">₹{relatedProduct.price}</span>
                         {relatedProduct.discount > 0 && (
-                          <span className="text-sm text-gray-400 line-through">
+                          <span className="text-sm text-gray-400 line-through ml-1">
                             ₹{Math.round(relatedProduct.price / (1 - relatedProduct.discount / 100))}
                           </span>
                         )}
                       </div>
                       <div className="text-xs text-gray-500 mb-3">Stock: {relatedProduct.stock}</div>
-                      <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-sm flex items-center gap-2 justify-center" suppressHydrationWarning>
-                        Add To Cart
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-primary hover:bg-accent text-primary-foreground text-xs flex items-center gap-1 justify-center"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            addToCartRelated(relatedProduct)
+                          }}
+                        >
+                          <ShoppingCart size={12} />
+                          Cart
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="px-2"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            addToWishlistRelated(relatedProduct)
+                          }}
+                        >
+                          <Heart size={12} />
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 </Link>

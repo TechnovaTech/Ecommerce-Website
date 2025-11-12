@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, Tag, LogOut } from "lucide-react"
+import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Settings, Tag, LogOut, Image, Warehouse } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -15,9 +15,11 @@ export default function AdminSidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin", active: true },
+    { icon: Image, label: "Banners", href: "/admin/banners" },
     { icon: Package, label: "Products", href: "/admin/products" },
     { icon: Tag, label: "Categories", href: "/admin/categories" },
     { icon: ShoppingCart, label: "Orders", href: "/admin/orders" },
+    { icon: Warehouse, label: "Inventory", href: "/admin/inventory" },
     { icon: Users, label: "Customers", href: "/admin/customers" },
     { icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
     { icon: Settings, label: "Settings", href: "/admin/settings" },

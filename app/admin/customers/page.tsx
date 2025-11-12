@@ -25,9 +25,10 @@ export default function CustomersPage() {
     try {
       const response = await fetch('/api/users')
       const data = await response.json()
-      setCustomers(data)
+      setCustomers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch customers:', error)
+      setCustomers([])
     } finally {
       setLoading(false)
     }

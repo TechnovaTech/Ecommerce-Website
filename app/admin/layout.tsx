@@ -15,9 +15,20 @@ export default function AdminLayout({
   const router = useRouter()
 
   useEffect(() => {
-    const adminLoggedIn = localStorage.getItem('adminLoggedIn')
-    if (adminLoggedIn === 'true') {
-      setIsAuthenticated(true)
+    const token = localStorage.getItem('token')
+    if (token) {
+      try {
+        // Decode token to check if user is admin
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        if (payload.isAdmin) {
+          setIsAuthenticated(true)
+        } else {
+          router.push('/login')
+        }
+      } catch (error) {
+        console.error('Invalid token:', error)
+        router.push('/login')
+      }
     } else {
       router.push('/login')
     }

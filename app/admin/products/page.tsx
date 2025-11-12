@@ -40,6 +40,7 @@ export default function ProductsPage() {
     images: [],
     status: 'in-stock'
   })
+  const [originalPrice, setOriginalPrice] = useState<number>(0)
 
   useEffect(() => {
     fetchProducts()
@@ -115,6 +116,7 @@ export default function ProductsPage() {
         fetchProducts()
         setShowForm(false)
         setEditingProduct(null)
+        setOriginalPrice(0)
         setFormData({
           name: '', price: '', stock: '', minStock: '', category: '', subcategory: '',
           discount: '', description: '', images: [], status: 'in-stock'
@@ -143,6 +145,9 @@ export default function ProductsPage() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
+    const discount = Number(product.discount) || 0
+    const calculatedOriginal = discount > 0 ? Math.round(Number(product.price) / (1 - discount / 100)) : Number(product.price)
+    setOriginalPrice(calculatedOriginal)
     setFormData({
       name: product.name,
       price: product.price,
@@ -180,6 +185,7 @@ export default function ProductsPage() {
           </div>
           <Button onClick={() => {
             setEditingProduct(null)
+            setOriginalPrice(0)
             setFormData({
               name: '', price: 0, stock: 0, minStock: 0, category: '', subcategory: '',
               discount: 0, description: '', images: [], status: 'in-stock'
@@ -200,6 +206,7 @@ export default function ProductsPage() {
                   <Button type="button" variant="ghost" onClick={() => {
                     setShowForm(false)
                     setEditingProduct(null)
+                    setOriginalPrice(0)
                     setFormData({
                       name: '', price: 0, stock: 0, minStock: 0, category: '', subcategory: '',
                       discount: 0, description: '', images: [], status: 'in-stock'
@@ -252,14 +259,50 @@ export default function ProductsPage() {
 
                   <div className="grid grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Price</label>
+                      <label className="block text-sm font-medium mb-2">Original Price (₹)</label>
                       <Input
                         type="number"
                         placeholder="0"
-                        value={formData.price}
-                        onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                        value={originalPrice}
+                        onChange={(e) => {
+                          const orig = Number(e.target.value)
+                          setOriginalPrice(orig)
+                          const discount = Number(formData.discount) || 0
+                          const finalPrice = orig * (1 - discount / 100)
+                          setFormData({ ...formData, price: Math.round(finalPrice) })
+                        }}
                         required
                       />
+                      <p className="text-xs text-gray-500 mt-1">Your base price</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Discount %</label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        max="99"
+                        value={formData.discount}
+                        onChange={(e) => {
+                          const discount = Number(e.target.value)
+                          setFormData({ ...formData, discount })
+                          if (originalPrice > 0) {
+                            const finalPrice = originalPrice * (1 - discount / 100)
+                            setFormData(prev => ({ ...prev, price: Math.round(finalPrice), discount }))
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Discount percentage</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Final Price (₹)</label>
+                      <Input
+                        type="number"
+                        value={formData.price}
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                      <p className="text-xs text-green-600 mt-1">Auto-calculated</p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">Stock</label>
@@ -271,6 +314,8 @@ export default function ProductsPage() {
                         required
                       />
                     </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">Min Stock</label>
                       <Input
@@ -281,15 +326,17 @@ export default function ProductsPage() {
                         required
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Discount %</label>
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={formData.discount}
-                        onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })}
-                      />
-                    </div>
+                    {originalPrice > 0 && Number(formData.discount) > 0 && (
+                      <div className="col-span-3">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-blue-800">Price Calculation:</p>
+                          <p className="text-sm text-blue-700">
+                            ₹{originalPrice} - {formData.discount}% = ₹{formData.price} 
+                            <span className="text-green-600 ml-2">(Save ₹{originalPrice - Number(formData.price)})</span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
