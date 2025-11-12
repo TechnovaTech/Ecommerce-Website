@@ -30,8 +30,18 @@ export default function CheckoutPage() {
     country: 'India'
   })
   const [processing, setProcessing] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    console.log('Token check:', token)
+    if (!token) {
+      console.log('No token found, redirecting to login')
+      window.location.href = '/login'
+      return
+    }
+    console.log('Token found, user is logged in')
+    setIsLoggedIn(true)
     fetchCart()
   }, [])
 
@@ -39,6 +49,7 @@ export default function CheckoutPage() {
     try {
       const token = localStorage.getItem('token')
       if (!token) {
+        console.log('No token in fetchCart, redirecting')
         window.location.href = '/login'
         return
       }
@@ -47,12 +58,19 @@ export default function CheckoutPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
+      console.log('Cart response status:', response.status)
+      if (response.status === 401) {
+        console.log('Unauthorized, redirecting to login')
+        window.location.href = '/login'
+        return
+      }
+
       if (response.ok) {
         const data = await response.json()
         setCartItems(data.items || [])
       }
     } catch (error) {
-      console.error('Failed to fetch cart')
+      console.error('Failed to fetch cart:', error)
     } finally {
       setLoading(false)
     }
@@ -112,7 +130,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (loading) {
+  if (!isLoggedIn || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>

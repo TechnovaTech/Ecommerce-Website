@@ -141,8 +141,7 @@ export default function CartPage() {
   const total = subtotal + shipping + tax
 
   const proceedToCheckout = () => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
-    if (!token) {
+    if (!isLoggedIn) {
       window.location.href = '/login'
       return
     }
@@ -342,13 +341,23 @@ export default function CartPage() {
                     <span className="text-lg" style={{color: 'lab(52.12% 47.1194 27.3658)'}}>₹{total.toFixed(0)}</span>
                   </div>
                 </div>
-                <Button 
-                  className="w-full text-white mb-2" 
-                  style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}
-                  onClick={proceedToCheckout}
-                >
-                  Proceed to Checkout
-                </Button>
+                {isLoggedIn ? (
+                  <Button 
+                    className="w-full text-white mb-2" 
+                    style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}
+                    onClick={() => window.location.href = '/checkout'}
+                  >
+                    Proceed to Checkout
+                  </Button>
+                ) : (
+                  <Button 
+                    className="w-full text-white mb-2" 
+                    style={{backgroundColor: 'lab(52.12% 47.1194 27.3658)'}}
+                    onClick={() => window.location.href = '/login'}
+                  >
+                    Login to Checkout
+                  </Button>
+                )}
                 <Link href="/products">
                   <Button variant="outline" className="w-full bg-transparent">
                     Continue Shopping
