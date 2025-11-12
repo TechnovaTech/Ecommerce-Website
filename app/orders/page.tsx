@@ -54,6 +54,27 @@ export default function OrdersPage() {
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingResult, setTrackingResult] = useState<Order | null>(null)
 
+  const trackingStages = [
+    { id: 1, name: 'Order Placed', status: 'pending' },
+    { id: 2, name: 'Order Confirmed', status: 'confirmed' },
+    { id: 3, name: 'Packed', status: 'processing' },
+    { id: 4, name: 'Shipped', status: 'shipped' },
+    { id: 5, name: 'Out for Delivery', status: 'out_for_delivery' },
+    { id: 6, name: 'Delivered', status: 'delivered' }
+  ]
+
+  const getCurrentStageIndex = (status: string) => {
+    const statusMap: Record<string, number> = {
+      'pending': 0,
+      'confirmed': 1,
+      'processing': 2,
+      'shipped': 3,
+      'out_for_delivery': 4,
+      'delivered': 5
+    }
+    return statusMap[status] || 0
+  }
+
   useEffect(() => {
     fetchOrders()
   }, [])
@@ -76,14 +97,14 @@ export default function OrdersPage() {
     
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`/api/orders?trackingNumber=${trackingNumber}`, {
+      const response = await fetch(`/api/orders?orderNumber=${trackingNumber}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await response.json()
       if (data.length > 0) {
         setTrackingResult(data[0])
       } else {
-        alert('Order not found with this tracking number')
+        alert('Order not found with this Order ID')
       }
     } catch (error) {
       alert('Failed to track order')
@@ -252,137 +273,158 @@ export default function OrdersPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4 text-gray-900">My Orders</h1>
         
-        {/* Order Tracking */}
-        <Card className="p-6 mb-6 bg-white shadow-sm border">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">Track Your Order</h2>
-          <div className="flex gap-4">
-            <Input
-              placeholder="Enter tracking number"
-              value={trackingNumber}
-              onChange={(e) => setTrackingNumber(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={trackOrder} className="bg-teal-600 hover:bg-teal-700 text-white" suppressHydrationWarning>Track Order</Button>
-          </div>
-          
-          {trackingResult && (
-            <div className="mt-4 p-4 bg-gray-50 rounded">
-              <h3 className="font-semibold">Order Found: {trackingResult.orderNumber}</h3>
-              <Badge className={`${getStatusColor(trackingResult.status)} mt-2`}>
-                {getStatusIcon(trackingResult.status)}
-                {trackingResult.status.replace('_', ' ').charAt(0).toUpperCase() + trackingResult.status.replace('_', ' ').slice(1)}
-              </Badge>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="ml-2"
-                onClick={() => {
-                  setSelectedOrder(trackingResult)
-                  setShowDetails(true)
-                }}
-              >
-                View Details
-              </Button>
+          {/* Order Tracking */}
+          <Card className="p-6 mb-6 bg-white shadow-sm border">
+            <h2 className="text-xl font-semibold mb-4 text-gray-800">Track Your Order</h2>
+            <div className="flex gap-4">
+              <Input
+                placeholder="Enter Order ID"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                className="flex-1"
+                onKeyPress={(e) => e.key === 'Enter' && trackOrder()}
+              />
+              <Button onClick={trackOrder} className="bg-teal-600 hover:bg-teal-700 text-white" suppressHydrationWarning>Track Order</Button>
             </div>
-          )}
-        </Card>
-      </div>
-
-      {/* Orders List */}
-      <div className="space-y-6">
-        {orders.map((order) => (
-          <Card key={order._id} className="p-6 bg-white shadow-sm border hover:shadow-lg hover:border-teal-300 transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
-                <p className="text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
-                <p className="text-sm text-gray-600">Tracking: {order.trackingNumber}</p>
-              </div>
-              <div className="text-right">
-                <Badge className={`${getStatusColor(order.status)} mb-2`}>
-                  {getStatusIcon(order.status)}
-                  {order.status.replace('_', ' ').charAt(0).toUpperCase() + order.status.replace('_', ' ').slice(1)}
-                </Badge>
-                <p className="text-lg font-semibold text-teal-600">₹{order.total.toFixed(2)}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-              {order.items.slice(0, 4).map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  {item.image && (
-                    <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                  )}
-                  <div>
-                    <p className="font-medium text-sm">{item.name}</p>
-                    <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+            
+            {trackingResult && (
+              <div className="mt-6">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-lg">Order #{trackingResult.orderNumber}</h3>
+                  <p className="text-sm text-gray-600">Total: ₹{trackingResult.total.toFixed(2)}</p>
+                </div>
+                
+                <div className="relative">
+                  <div className="flex items-center justify-between">
+                    {trackingStages.map((stage, index) => {
+                      const currentStage = getCurrentStageIndex(trackingResult.status)
+                      const isCompleted = index <= currentStage
+                      const isCurrent = index === currentStage
+                      
+                      return (
+                        <div key={stage.id} className="flex flex-col items-center relative flex-1">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                            isCompleted 
+                              ? 'bg-teal-500 text-white' 
+                              : 'bg-gray-200 text-gray-500'
+                          } ${isCurrent ? 'ring-2 ring-teal-300' : ''}`}>
+                            {index + 1}
+                          </div>
+                          <p className={`mt-2 text-xs text-center font-medium ${
+                            isCompleted ? 'text-teal-600' : 'text-gray-400'
+                          }`}>
+                            {stage.name}
+                          </p>
+                          {index < trackingStages.length - 1 && (
+                            <div className={`absolute top-4 left-1/2 w-full h-0.5 ${
+                              index < currentStage ? 'bg-teal-500' : 'bg-gray-300'
+                            }`} style={{transform: 'translateX(50%)', width: 'calc(100% - 1rem)'}}></div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
-              ))}
-              {order.items.length > 4 && (
-                <div className="flex items-center justify-center text-gray-500">
-                  +{order.items.length - 4} more items
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-teal-200 text-teal-700 hover:bg-teal-100 hover:border-teal-400 hover:text-teal-800"
-                onClick={() => {
-                  setSelectedOrder(order)
-                  setShowDetails(true)
-                }}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                View Details
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                className="hover:bg-gray-100 hover:border-gray-400"
-                onClick={() => downloadInvoice(order._id)}
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Invoice
-              </Button>
-
-              {canCancelOrder(order.status) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-red-50 hover:border-red-300 hover:text-red-700"
-                  onClick={() => {
-                    setSelectedOrder(order)
-                    setShowCancelModal(true)
-                  }}
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Cancel Order
-                </Button>
-              )}
-
-              {canReturnOrder(order.status) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
-                  onClick={() => {
-                    setSelectedOrder(order)
-                    setShowReturnModal(true)
-                  }}
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Return Order
-                </Button>
-              )}
-            </div>
+              </div>
+            )}
           </Card>
-        ))}
-      </div>
+          
+          {/* Orders List */}
+          <div className="space-y-6">
+            {orders.map((order) => (
+              <Card key={order._id} className="p-6 bg-white shadow-sm border hover:shadow-lg hover:border-teal-300 transition-all duration-200">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
+                    <p className="text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-600">Tracking: {order.trackingNumber}</p>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={`${getStatusColor(order.status)} mb-2`}>
+                      {getStatusIcon(order.status)}
+                      {order.status.replace('_', ' ').charAt(0).toUpperCase() + order.status.replace('_', ' ').slice(1)}
+                    </Badge>
+                    <p className="text-lg font-semibold text-teal-600">₹{order.total.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                  {order.items.slice(0, 4).map((item, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      {item.image && (
+                        <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                      )}
+                      <div>
+                        <p className="font-medium text-sm">{item.name}</p>
+                        <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                  {order.items.length > 4 && (
+                    <div className="flex items-center justify-center text-gray-500">
+                      +{order.items.length - 4} more items
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-teal-200 text-teal-700 hover:bg-teal-100 hover:border-teal-400 hover:text-teal-800"
+                    onClick={() => {
+                      setSelectedOrder(order)
+                      setShowDetails(true)
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="hover:bg-gray-100 hover:border-gray-400"
+                    onClick={() => downloadInvoice(order._id)}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Invoice
+                  </Button>
+
+                  {canCancelOrder(order.status) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hover:bg-red-50 hover:border-red-300 hover:text-red-700"
+                      onClick={() => {
+                        setSelectedOrder(order)
+                        setShowCancelModal(true)
+                      }}
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Cancel Order
+                    </Button>
+                  )}
+
+                  {canReturnOrder(order.status) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700"
+                      onClick={() => {
+                        setSelectedOrder(order)
+                        setShowReturnModal(true)
+                      }}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Return Order
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
 
       {/* Order Details Modal */}
       {showDetails && selectedOrder && (
