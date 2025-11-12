@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { Eye, Package, Truck, CheckCircle, XCircle, RefreshCw, FileText, Download } from "lucide-react"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
 
 interface Order {
   _id: string
@@ -173,7 +175,7 @@ export default function OrdersPage() {
             <hr>
             <table border="1" style="width: 100%; border-collapse: collapse;">
               <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
-              ${invoice.items.map(item => `
+              ${invoice.items.map((item: any) => `
                 <tr>
                   <td>${item.name}</td>
                   <td>${item.quantity}</td>
@@ -203,7 +205,7 @@ export default function OrdersPage() {
   }
 
   const getStatusColor = (status: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       'pending': 'bg-yellow-100 text-yellow-800',
       'confirmed': 'bg-blue-100 text-blue-800',
       'processing': 'bg-purple-100 text-purple-800',
@@ -243,13 +245,15 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">My Orders</h1>
+    <div className="min-h-screen mt-12 bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-4 text-gray-900">My Orders</h1>
         
         {/* Order Tracking */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Track Your Order</h2>
+        <Card className="p-6 mb-6 bg-white shadow-sm border">
+          <h2 className="text-xl font-semibold mb-4 text-gray-800">Track Your Order</h2>
           <div className="flex gap-4">
             <Input
               placeholder="Enter tracking number"
@@ -257,7 +261,7 @@ export default function OrdersPage() {
               onChange={(e) => setTrackingNumber(e.target.value)}
               className="flex-1"
             />
-            <Button onClick={trackOrder}>Track Order</Button>
+            <Button onClick={trackOrder} className="bg-teal-600 hover:bg-teal-700 text-white">Track Order</Button>
           </div>
           
           {trackingResult && (
@@ -284,12 +288,12 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders List */}
-      <div className="space-y-4">
+      <div className="space-y-6">
         {orders.map((order) => (
-          <Card key={order._id} className="p-6">
+          <Card key={order._id} className="p-6 bg-white shadow-sm border hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold">Order #{order.orderNumber}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Order #{order.orderNumber}</h3>
                 <p className="text-sm text-gray-600">Placed on {new Date(order.createdAt).toLocaleDateString()}</p>
                 <p className="text-sm text-gray-600">Tracking: {order.trackingNumber}</p>
               </div>
@@ -298,7 +302,7 @@ export default function OrdersPage() {
                   {getStatusIcon(order.status)}
                   {order.status.replace('_', ' ').charAt(0).toUpperCase() + order.status.replace('_', ' ').slice(1)}
                 </Badge>
-                <p className="text-lg font-semibold">${order.total.toFixed(2)}</p>
+                <p className="text-lg font-semibold text-teal-600">₹{order.total.toFixed(2)}</p>
               </div>
             </div>
 
@@ -325,6 +329,7 @@ export default function OrdersPage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="border-teal-200 text-teal-700 hover:bg-teal-50"
                 onClick={() => {
                   setSelectedOrder(order)
                   setShowDetails(true)
@@ -525,6 +530,8 @@ export default function OrdersPage() {
           </Card>
         </div>
       )}
+      </div>
+      <Footer />
     </div>
   )
 }
