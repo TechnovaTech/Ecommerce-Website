@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { userId } = requireAuth(request)
-    const { items, shippingAddress, paymentMethod } = await request.json()
+    const { items, subtotal, tax, shipping, total, shippingAddress, paymentMethod, paymentStatus } = await request.json()
     
     const client = await clientPromise
     const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
@@ -70,11 +70,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Insufficient stock for ${item.name}` }, { status: 400 })
       }
     }
-    
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    const tax = subtotal * 0.1 // 10% tax
-    const shipping = subtotal > 500 ? 0 : 50 // Free shipping over $500
-    const total = subtotal + tax + shipping
     
     const orderNumber = generateOrderNumber()
     const trackingNumber = generateTrackingNumber()
@@ -90,12 +85,16 @@ export async function POST(request: NextRequest) {
       total,
       shippingAddress,
       paymentMethod,
-      status: 'pending',
-      paymentStatus: 'pending',
+      status: 'confirmed',
+      paymentStatus: paymentStatus || 'pending',
       trackingHistory: [{
         status: 'Order Placed',
         timestamp: new Date(),
         description: 'Your order has been placed successfully'
+      }, {
+        status: 'Order Confirmed',
+        timestamp: new Date(),
+        description: 'Your order has been confirmed and is being processed'
       }],
       createdAt: new Date(),
       updatedAt: new Date()
@@ -110,9 +109,6 @@ export async function POST(request: NextRequest) {
         { $inc: { stock: -item.quantity } }
       )
     }
-    
-    // Clear user's cart after order
-    await db.collection('carts').deleteOne({ userId: new ObjectId(userId) })
     
     return NextResponse.json({ orderId: result.insertedId, orderNumber, success: true })
   } catch (error) {
