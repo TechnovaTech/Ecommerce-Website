@@ -343,30 +343,28 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-3 mb-4">
-              <div className="flex gap-3">
-                <Button 
-                  className="flex-1 bg-primary hover:bg-accent text-primary-foreground text-sm py-3 flex items-center gap-2 justify-center"
-                  onClick={addToCart}
-                  disabled={product.stock === 0}
-                >
-                  <ShoppingCart size={16} />
-                  Add To Cart
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="px-4"
-                  onClick={toggleWishlist}
-                >
-                  <Heart size={16} className={isInWishlist ? 'fill-red-500 text-red-500' : ''} />
-                </Button>
-              </div>
+            <div className="flex gap-3 mb-4">
               <Button 
-                className="w-full bg-black hover:bg-gray-800 text-white text-sm py-3"
+                className="w-32 bg-primary hover:bg-accent text-primary-foreground text-sm py-2 flex items-center gap-2 justify-center"
+                onClick={addToCart}
+                disabled={product.stock === 0}
+              >
+                <ShoppingCart size={16} />
+                Add To Cart
+              </Button>
+              <Button 
+                className="w-32 bg-black hover:bg-gray-800 text-white text-sm py-2"
                 onClick={buyNow}
                 disabled={product.stock === 0}
               >
                 ⚡ Buy Now
+              </Button>
+              <Button 
+                variant="outline"
+                className="px-4"
+                onClick={toggleWishlist}
+              >
+                <Heart size={16} className={isInWishlist ? 'fill-red-500 text-red-500' : ''} />
               </Button>
             </div>
             
