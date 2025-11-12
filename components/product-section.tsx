@@ -38,6 +38,17 @@ export default function ProductSection({ title, category, link }: ProductSection
     fetchProducts()
   }, [])
 
+  useEffect(() => {
+    // Sync local wishlist with global wishlist
+    const syncWishlist = new Set()
+    products.forEach(product => {
+      if (isInWishlist(product._id)) {
+        syncWishlist.add(product._id)
+      }
+    })
+    setLocalWishlist(syncWishlist)
+  }, [products, isInWishlist])
+
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/products')

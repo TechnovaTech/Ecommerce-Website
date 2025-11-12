@@ -34,10 +34,10 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const data = await response.json()
         const productIds = data.map((item: any) => {
-          if (item.product && typeof item.product === 'object') {
-            return item.product._id
+          if (item.productId && typeof item.productId === 'object') {
+            return item.productId._id
           }
-          return item.product || item._id
+          return item.productId || item.product || item._id
         }).filter(Boolean)
         setWishlistItems(productIds)
         setWishlistCount(data.length || 0)

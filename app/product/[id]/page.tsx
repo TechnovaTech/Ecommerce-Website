@@ -41,6 +41,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     fetchProduct()
   }, [id])
 
+  useEffect(() => {
+    // Sync local wishlist with global wishlist on mount
+    if (product) {
+      if (isInWishlist(product._id)) {
+        setLocalWishlist(prev => new Set([...prev, product._id]))
+      }
+    }
+  }, [product, isInWishlist])
+
   const fetchProduct = async () => {
     try {
       console.log('Fetching product with ID:', id)
@@ -52,6 +61,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         console.log('Product data:', data)
         setProduct(data)
         fetchRelatedProducts(data.category)
+        // Sync wishlist state for this product
+        if (isInWishlist(data._id)) {
+          setLocalWishlist(prev => new Set([...prev, data._id]))
+        }
       } else {
         const errorData = await response.json()
         console.error('API Error:', errorData)

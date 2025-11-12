@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 
 interface WishlistItem {
   _id: string
@@ -25,6 +26,7 @@ interface WishlistItem {
 export default function WishlistPage() {
   const { toast } = useToast()
   const { updateCartCount } = useCart()
+  const { updateWishlistCount } = useWishlist()
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -53,7 +55,12 @@ export default function WishlistPage() {
 
       if (response.ok) {
         const data = await response.json()
-        setWishlistItems(Array.isArray(data) ? data : [])
+        // Transform the API response to match the expected structure
+        const transformedData = data.map((item: any) => ({
+          _id: item._id,
+          productId: item.productId
+        }))
+        setWishlistItems(Array.isArray(transformedData) ? transformedData : [])
       }
     } catch (error) {
       console.error('Failed to fetch wishlist')
@@ -76,6 +83,7 @@ export default function WishlistPage() {
 
       if (response.ok) {
         fetchWishlist()
+        updateWishlistCount()
         toast({
           title: "✅ Removed from Wishlist",
           description: "Item has been removed from your wishlist.",
