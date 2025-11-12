@@ -10,6 +10,7 @@ import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { useToast } from "@/hooks/use-toast"
 import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 
 
 interface Product {
@@ -28,12 +29,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { id } = use(params)
   const { toast } = useToast()
   const { updateCartCount } = useCart()
+  const { updateWishlistCount, isInWishlist, addToWishlistLocal, removeFromWishlistLocal } = useWishlist()
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [isInWishlist, setIsInWishlist] = useState(false)
+  const [localWishlist, setLocalWishlist] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetchProduct()
@@ -139,7 +141,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         return
       }
 
-      const method = isInWishlist ? 'DELETE' : 'POST'
+      if (!product) return
+
+      const currentlyInWishlist = isInWishlist(product._id)
+      const method = currentlyInWishlist ? 'DELETE' : 'POST'
       const response = await fetch('/api/wishlist', {
         method,
         headers: {
@@ -147,15 +152,31 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          productId: product?._id
+          productId: product._id
         })
       })
 
+      // Immediate UI update
+      if (currentlyInWishlist) {
+        setLocalWishlist(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(product._id)
+          return newSet
+        })
+      } else {
+        setLocalWishlist(prev => new Set([...prev, product._id]))
+      }
+
       if (response.ok) {
-        setIsInWishlist(!isInWishlist)
+        if (currentlyInWishlist) {
+          removeFromWishlistLocal(product._id)
+        } else {
+          addToWishlistLocal(product._id)
+        }
+        updateWishlistCount()
         toast({
-          title: isInWishlist ? "❤️ Removed from Wishlist" : "❤️ Added to Wishlist!",
-          description: isInWishlist ? "Item removed from your wishlist." : "Item added to your wishlist successfully.",
+          title: currentlyInWishlist ? "❤️ Removed from Wishlist" : "❤️ Added to Wishlist!",
+          description: currentlyInWishlist ? "Item removed from your wishlist." : "Item added to your wishlist successfully.",
           duration: 3000,
         })
       } else {
@@ -233,6 +254,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   }
 
   const addToWishlistRelated = async (relatedProduct: Product) => {
+    // Immediate UI update
+    setLocalWishlist(prev => new Set([...prev, relatedProduct._id]))
+    
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -257,6 +281,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       })
 
       if (response.ok) {
+        addToWishlistLocal(relatedProduct._id)
+        updateWishlistCount()
         toast({
           title: "❤️ Added to Wishlist!",
           description: `${relatedProduct.name} has been added to your wishlist.`,
@@ -446,7 +472,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 className="px-4"
                 onClick={toggleWishlist}
               >
-                <Heart size={16} className={isInWishlist ? 'fill-red-500 text-red-500' : ''} />
+                <Heart 
+                  size={16} 
+                  className={product && (isInWishlist(product._id) || localWishlist.has(product._id)) ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+                />
               </Button>
             </div>
             
@@ -512,7 +541,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                             addToWishlistRelated(relatedProduct)
                           }}
                         >
-                          <Heart size={12} />
+                          <Heart 
+                            size={12} 
+                            className={(isInWishlist(relatedProduct._id) || localWishlist.has(relatedProduct._id)) ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+                          />
                         </Button>
                       </div>
                     </div>

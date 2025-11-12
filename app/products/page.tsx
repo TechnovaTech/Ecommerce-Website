@@ -4,9 +4,12 @@ import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ShoppingCart, Heart } from "lucide-react"
 import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
+import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 
 interface Product {
   _id: string
@@ -18,6 +21,7 @@ interface Product {
   description: string
   images: string[]
   status: string
+  createdAt?: string
 }
 
 function ProductsContent() {
@@ -30,8 +34,11 @@ function ProductsContent() {
   const [minPrice, setMinPrice] = useState(0)
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [availabilityOpen, setAvailabilityOpen] = useState(true)
+  const [localWishlist, setLocalWishlist] = useState<Set<string>>(new Set())
   const searchParams = useSearchParams()
   const filter = searchParams.get('filter')
+  const { updateCartCount } = useCart()
+  const { updateWishlistCount, isInWishlist, addToWishlistLocal } = useWishlist()
 
   useEffect(() => {
     fetchProducts()
@@ -86,6 +93,65 @@ function ProductsContent() {
   }
 
   const displayProducts = getFilteredProducts()
+
+  const addToCart = async (product: Product) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        window.location.href = '/login'
+        return
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id,
+          quantity: 1
+        })
+      })
+
+      if (response.ok) {
+        updateCartCount()
+      }
+    } catch (error) {
+      console.error('Failed to add to cart')
+    }
+  }
+
+  const addToWishlist = async (product: Product) => {
+    // Immediate UI update
+    setLocalWishlist(prev => new Set([...prev, product._id]))
+    
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        window.location.href = '/login'
+        return
+      }
+
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id
+        })
+      })
+
+      if (response.ok) {
+        addToWishlistLocal(product._id)
+        updateWishlistCount()
+      }
+    } catch (error) {
+      console.error('Failed to add to wishlist')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -227,33 +293,61 @@ function ProductsContent() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
                 {displayProducts.map((product) => (
                   <Link key={product._id} href={`/product/${product._id}`}>
-                    <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer h-full">
-                      <div className="relative w-full h-48 bg-gray-100">
+                    <Card className="overflow-hidden hover:shadow-xl hover:border-accent transition duration-300 h-full flex flex-col bg-card">
+                      <div className="relative w-full h-48 bg-secondary overflow-hidden group">
                         <img
                           src={product.images[0] || "/placeholder.svg"}
                           alt={product.name}
-                          className="w-full h-full object-cover hover:scale-105 transition"
+                          className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
                         />
                         {product.discount > 0 && (
-                          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                          <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                             {product.discount}% OFF
                           </div>
                         )}
+                        {filter === 'new-arrivals' && (
+                          <div className="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            NEW
+                          </div>
+                        )}
                       </div>
-                      <div className="p-3 lg:p-4">
-                        <h3 className="text-xs lg:text-sm font-medium text-gray-800 line-clamp-2 mb-2">{product.name}</h3>
-                        <div className="flex items-center gap-1 lg:gap-2 mb-2 lg:mb-3">
-                          <span className="text-sm lg:text-lg font-bold text-red-600">₹{product.price}</span>
+                      <div className="p-3 md:p-4 flex-1 flex flex-col">
+                        <h3 className="text-sm font-medium text-foreground line-clamp-2 mb-2">{product.name}</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-base md:text-lg font-bold text-primary">₹{product.price}</span>
                           {product.discount > 0 && (
-                            <span className="text-xs lg:text-sm text-gray-400 line-through">
+                            <span className="text-xs md:text-sm text-muted-foreground line-through">
                               ₹{Math.round(product.price / (1 - product.discount / 100))}
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-gray-500 mb-2">Stock: {product.stock}</div>
-                        <Button className="w-full bg-primary hover:bg-accent text-primary-foreground text-xs lg:text-sm py-2 flex items-center gap-2 justify-center" suppressHydrationWarning>
-                          Add to Cart
-                        </Button>
+                        <div className="text-xs text-gray-500 mb-3">Stock: {product.stock}</div>
+                        <div className="flex gap-2 mt-auto">
+                          <Button 
+                            className="flex-1 bg-primary hover:bg-accent text-primary-foreground text-xs md:text-sm flex items-center gap-1 justify-center"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              addToCart(product)
+                            }}
+                          >
+                            <ShoppingCart size={14} />
+                            Add to Cart
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            className="px-2"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              addToWishlist(product)
+                            }}
+                          >
+                            <Heart 
+                              size={14} 
+                              className={(isInWishlist(product._id) || localWishlist.has(product._id)) ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+                            />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   </Link>
