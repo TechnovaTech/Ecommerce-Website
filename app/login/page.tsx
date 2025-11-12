@@ -2,20 +2,29 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [redirectUrl, setRedirectUrl] = useState('/')
+
+  useEffect(() => {
+    const redirect = searchParams.get('redirect')
+    if (redirect) {
+      setRedirectUrl(redirect)
+    }
+  }, [searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,8 +54,8 @@ export default function LoginPage() {
           console.log('Redirecting to admin')
           window.location.href = '/admin'
         } else {
-          console.log('Redirecting to home')
-          router.push('/')
+          console.log('Redirecting to:', redirectUrl)
+          window.location.href = redirectUrl
         }
       } else {
         toast({

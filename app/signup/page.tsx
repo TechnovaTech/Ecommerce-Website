@@ -2,16 +2,17 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [formData, setFormData] = useState({
     fullName: "",
@@ -20,6 +21,14 @@ export default function SignupPage() {
     confirmPassword: "",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [redirectUrl, setRedirectUrl] = useState('/')
+
+  useEffect(() => {
+    const redirect = searchParams.get('redirect')
+    if (redirect) {
+      setRedirectUrl(redirect)
+    }
+  }, [searchParams])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -74,7 +83,7 @@ export default function SignupPage() {
             description: "Welcome to Shukan Mall! You are now logged in.",
             duration: 4000,
           })
-          router.push('/')
+          window.location.href = redirectUrl
         } else {
           toast({
             title: "✅ Account Created",
@@ -176,7 +185,7 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600 mb-4">Already have an account?</p>
-            <Link href="/login" className="text-teal-600 hover:text-teal-700 font-semibold">
+            <Link href={`/login${redirectUrl !== '/' ? `?redirect=${redirectUrl}` : ''}`} className="text-teal-600 hover:text-teal-700 font-semibold">
               Login
             </Link>
           </div>

@@ -17,12 +17,21 @@ export async function GET(request: NextRequest) {
     const isAdmin = searchParams.get('admin') === 'true'
     const status = searchParams.get('status')
     const orderId = searchParams.get('orderId')
+    const trackingNumber = searchParams.get('trackingNumber')
+    
+    const client = await clientPromise
+    const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
+    
+    // Handle tracking number search (public access)
+    if (trackingNumber) {
+      const orders = await db.collection('orders')
+        .find({ trackingNumber })
+        .toArray()
+      return NextResponse.json(orders)
+    }
     
     if (isAdmin) {
       // Admin can see all orders
-      const client = await clientPromise
-      const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
-      
       let query = {}
       if (status && status !== 'all') query.status = status
       if (orderId) query._id = new ObjectId(orderId)
@@ -36,9 +45,6 @@ export async function GET(request: NextRequest) {
     } else {
       // Regular user sees only their orders
       const { userId } = requireAuth(request)
-      
-      const client = await clientPromise
-      const db = client.db(process.env.DATABASE_NAME || 'shukanmall')
       
       let query = { userId: new ObjectId(userId) }
       if (status && status !== 'all') query.status = status
