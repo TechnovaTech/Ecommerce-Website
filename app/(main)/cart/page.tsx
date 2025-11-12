@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Trash2, Plus, Minus, ShoppingBag, Download } from "lucide-react"
+import { Trash2, Plus, Minus, ShoppingBag, Download, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 interface CartItem {
   _id: string
@@ -17,6 +18,7 @@ interface CartItem {
 }
 
 export default function CartPage() {
+  const { toast } = useToast()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showBill, setShowBill] = useState(false)
@@ -83,11 +85,21 @@ export default function CartPage() {
 
       if (response.ok) {
         fetchCart()
+        toast({
+          title: "✅ Quantity Updated",
+          description: "Cart item quantity has been updated successfully.",
+          duration: 3000,
+        })
       } else if (response.status === 401) {
         window.location.href = '/login'
       }
     } catch (error) {
-      console.error('Failed to update quantity')
+      toast({
+        title: "❌ Update Failed",
+        description: "Failed to update quantity. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -105,11 +117,21 @@ export default function CartPage() {
 
       if (response.ok) {
         fetchCart()
+        toast({
+          title: "✅ Item Removed",
+          description: "Item has been removed from your cart.",
+          duration: 3000,
+        })
       } else if (response.status === 401) {
         window.location.href = '/login'
       }
     } catch (error) {
-      console.error('Failed to remove item')
+      toast({
+        title: "❌ Removal Failed",
+        description: "Failed to remove item. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     }
   }
 
@@ -129,6 +151,12 @@ export default function CartPage() {
 
   const placeOrder = async () => {
     if (!shippingAddress.street || !shippingAddress.city) {
+      toast({
+        title: "⚠️ Missing Information",
+        description: "Please fill in all required address fields.",
+        variant: "destructive",
+        duration: 3000,
+      })
       return
     }
 
@@ -177,10 +205,27 @@ export default function CartPage() {
           setShowBill(true)
           setShowCheckout(false)
           fetchCart()
+          toast({
+            title: "🎉 Order Placed Successfully!",
+            description: `Your order #${order.orderNumber || 'N/A'} has been confirmed. Thank you for shopping with us!`,
+            duration: 5000,
+          })
         }
+      } else {
+        toast({
+          title: "❌ Order Failed",
+          description: "Failed to place your order. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
       }
     } catch (error) {
-      console.error('Order failed')
+      toast({
+        title: "❌ Order Failed",
+        description: "An error occurred while placing your order. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
     } finally {
       setProcessing(false)
     }
