@@ -6,6 +6,9 @@ import { Card } from "@/components/ui/card"
 import { Heart, ShoppingCart, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import { useCart } from "@/lib/cart-context"
 
 interface WishlistItem {
   _id: string
@@ -21,11 +24,19 @@ interface WishlistItem {
 
 export default function WishlistPage() {
   const { toast } = useToast()
+  const { updateCartCount } = useCart()
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
-    fetchWishlist()
+    const token = localStorage.getItem('token')
+    if (token) {
+      setIsLoggedIn(true)
+      fetchWishlist()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const fetchWishlist = async () => {
@@ -104,6 +115,7 @@ export default function WishlistPage() {
       })
 
       if (response.ok) {
+        updateCartCount()
         toast({
           title: "🛍️ Added to Cart!",
           description: "Item has been successfully added to your cart.",
@@ -127,15 +139,32 @@ export default function WishlistPage() {
     }
   }
 
+  if (!isLoggedIn && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <Card className="p-8 text-center max-w-md">
+            <Heart className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+            <h2 className="text-xl font-semibold mb-2">Please Login</h2>
+            <p className="text-gray-600 mb-4">You need to login to view your wishlist</p>
+            <Link href="/login">
+              <Button className="bg-teal-600 hover:bg-teal-700 text-white">Login</Button>
+            </Link>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="bg-gray-200 h-8 rounded mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-gray-200 h-64 rounded"></div>
-            ))}
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+          <div className="animate-pulse">
+            <div className="bg-gray-200 h-8 rounded mb-4"></div>
+            <div className="bg-gray-200 h-32 rounded"></div>
           </div>
         </div>
       </div>
@@ -143,8 +172,9 @@ export default function WishlistPage() {
   }
 
   return (
-    <div className="min-h-screen mt-22 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto px-4 py-8 pt-32">
         <h1 className="text-3xl font-bold mb-8">My Wishlist</h1>
 
         {wishlistItems.length === 0 ? (

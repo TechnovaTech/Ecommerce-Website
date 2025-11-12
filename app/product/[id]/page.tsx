@@ -9,6 +9,7 @@ import Link from "next/link"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
 import { useToast } from "@/hooks/use-toast"
+import { useCart } from "@/lib/cart-context"
 
 
 interface Product {
@@ -26,6 +27,7 @@ interface Product {
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { toast } = useToast()
+  const { updateCartCount } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,6 +102,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       })
 
       if (response.ok) {
+        updateCartCount()
         toast({
           title: "🛍️ Added to Cart!",
           description: `Successfully added ${quantity} item(s) to your cart.`,
@@ -205,6 +208,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       })
 
       if (response.ok) {
+        updateCartCount()
         toast({
           title: "🛍️ Added to Cart!",
           description: `${relatedProduct.name} has been added to your cart.`,

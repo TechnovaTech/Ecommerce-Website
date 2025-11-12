@@ -5,13 +5,15 @@ import { Search, LogIn, ShoppingCart, User, ChevronDown, Heart } from "lucide-re
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import RealTimeNotifications from "./real-time-notifications"
+import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("")
   const [user, setUser] = useState<any>(null)
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
-  const [cartCount, setCartCount] = useState(0)
-  const [wishlistCount, setWishlistCount] = useState(0)
+  const { cartCount } = useCart()
+  const { wishlistCount } = useWishlist()
   const [categories, setCategories] = useState<any[]>([])
   const [subcategories, setSubcategories] = useState<any[]>([])
   const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false)
@@ -24,8 +26,6 @@ export default function Header() {
     if (token) {
       // Fetch user data
       fetchUserData()
-      fetchCartCount()
-      fetchWishlistCount()
     }
     // Fetch categories and subcategories
     fetchCategories()
@@ -48,38 +48,9 @@ export default function Header() {
     }
   }
 
-  const fetchCartCount = async () => {
-    try {
-      const response = await fetch('/api/cart', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        const count = data.items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0
-        setCartCount(count)
-      }
-    } catch (error) {
-      console.error('Failed to fetch cart count:', error)
-    }
-  }
 
-  const fetchWishlistCount = async () => {
-    try {
-      const response = await fetch('/api/wishlist', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setWishlistCount(data.items?.length || 0)
-      }
-    } catch (error) {
-      console.error('Failed to fetch wishlist count:', error)
-    }
-  }
+
+
 
   const fetchCategories = async () => {
     try {
@@ -150,7 +121,8 @@ export default function Header() {
               </Link>
               {/* Products with Categories Dropdown */}
               <div className="relative">
-                <button 
+                <Link 
+                  href="/products"
                   onMouseEnter={() => setShowCategoriesDropdown(true)}
                   onMouseLeave={() => setShowCategoriesDropdown(false)}
                   className="flex items-center gap-1 text-sm font-medium hover:text-orange-600 transition-colors"
@@ -158,7 +130,7 @@ export default function Header() {
                 >
                   Products
                   <ChevronDown size={14} />
-                </button>
+                </Link>
                 
                 {showCategoriesDropdown && (
                   <div 
