@@ -30,8 +30,9 @@ interface ProductSectionProps {
 export default function ProductSection({ title, category, link }: ProductSectionProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [localWishlist, setLocalWishlist] = useState<Set<string>>(new Set())
   const { updateCartCount } = useCart()
-  const { updateWishlistCount } = useWishlist()
+  const { updateWishlistCount, isInWishlist, addToWishlistLocal } = useWishlist()
 
   useEffect(() => {
     fetchProducts()
@@ -97,6 +98,9 @@ export default function ProductSection({ title, category, link }: ProductSection
   }
 
   const addToWishlist = async (product: Product) => {
+    // Immediate UI update
+    setLocalWishlist(prev => new Set([...prev, product._id]))
+    
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -116,6 +120,7 @@ export default function ProductSection({ title, category, link }: ProductSection
       })
 
       if (response.ok) {
+        addToWishlistLocal(product._id)
         updateWishlistCount()
       }
     } catch (error) {
@@ -203,7 +208,7 @@ export default function ProductSection({ title, category, link }: ProductSection
                         }}
                       >
                         <ShoppingCart size={14} />
-                        Cart
+                        Add to Cart
                       </Button>
                       <Button 
                         variant="outline"
@@ -214,7 +219,10 @@ export default function ProductSection({ title, category, link }: ProductSection
                           addToWishlist(product)
                         }}
                       >
-                        <Heart size={14} />
+                        <Heart 
+                          size={14} 
+                          className={(isInWishlist(product._id) || localWishlist.has(product._id)) ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+                        />
                       </Button>
                     </div>
                   </div>

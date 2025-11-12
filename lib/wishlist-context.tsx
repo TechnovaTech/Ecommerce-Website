@@ -4,13 +4,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 
 interface WishlistContextType {
   wishlistCount: number
+  wishlistItems: string[]
   updateWishlistCount: () => void
+  isInWishlist: (productId: string) => boolean
+  addToWishlistLocal: (productId: string) => void
+  removeFromWishlistLocal: (productId: string) => void
 }
 
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined)
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [wishlistCount, setWishlistCount] = useState(0)
+  const [wishlistItems, setWishlistItems] = useState<string[]>([])
 
   const fetchWishlistCount = async () => {
     try {
@@ -28,13 +33,22 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       
       if (response.ok) {
         const data = await response.json()
+        const productIds = data.map((item: any) => {
+          if (item.product && typeof item.product === 'object') {
+            return item.product._id
+          }
+          return item.product || item._id
+        }).filter(Boolean)
+        setWishlistItems(productIds)
         setWishlistCount(data.length || 0)
       } else {
         setWishlistCount(0)
+        setWishlistItems([])
       }
     } catch (error) {
       console.error('Failed to fetch wishlist count:', error)
       setWishlistCount(0)
+      setWishlistItems([])
     }
   }
 
@@ -46,8 +60,26 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     fetchWishlistCount()
   }, [])
 
+  const isInWishlist = (productId: string) => {
+    return wishlistItems.includes(productId)
+  }
+
+  const addToWishlistLocal = (productId: string) => {
+    if (!wishlistItems.includes(productId)) {
+      setWishlistItems(prev => [...prev, productId])
+      setWishlistCount(prev => prev + 1)
+    }
+  }
+
+  const removeFromWishlistLocal = (productId: string) => {
+    if (wishlistItems.includes(productId)) {
+      setWishlistItems(prev => prev.filter(id => id !== productId))
+      setWishlistCount(prev => prev - 1)
+    }
+  }
+
   return (
-    <WishlistContext.Provider value={{ wishlistCount, updateWishlistCount }}>
+    <WishlistContext.Provider value={{ wishlistCount, wishlistItems, updateWishlistCount, isInWishlist, addToWishlistLocal, removeFromWishlistLocal }}>
       {children}
     </WishlistContext.Provider>
   )
