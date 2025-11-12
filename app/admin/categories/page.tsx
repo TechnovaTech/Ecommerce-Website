@@ -19,6 +19,7 @@ interface SubCategory {
   _id?: string
   name: string
   parentCategory: string
+  image?: string
 }
 
 export default function CategoriesPage() {
@@ -35,6 +36,7 @@ export default function CategoriesPage() {
   const [showSubForm, setShowSubForm] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<string>('')
   const [subCategoryName, setSubCategoryName] = useState('')
+  const [subCategoryImage, setSubCategoryImage] = useState('')
 
   useEffect(() => {
     fetchCategories()
@@ -191,11 +193,11 @@ export default function CategoriesPage() {
                   <form onSubmit={async (e) => {
                     e.preventDefault()
                     try {
-                      console.log('Submitting subcategory:', { name: subCategoryName, parentCategory: selectedCategory })
+                      console.log('Submitting subcategory:', { name: subCategoryName, parentCategory: selectedCategory, image: subCategoryImage })
                       const response = await fetch('/api/subcategories', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: subCategoryName, parentCategory: selectedCategory })
+                        body: JSON.stringify({ name: subCategoryName, parentCategory: selectedCategory, image: subCategoryImage })
                       })
                       
                       const result = await response.json()
@@ -207,6 +209,7 @@ export default function CategoriesPage() {
                         setShowSubForm(false)
                         setSubCategoryName('')
                         setSelectedCategory('')
+                        setSubCategoryImage('')
                       } else {
                         alert('Error: ' + result.error)
                       }
@@ -236,6 +239,27 @@ export default function CategoriesPage() {
                         onChange={(e) => setSubCategoryName(e.target.value)}
                         required
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Subcategory Image/Icon</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              setSubCategoryImage(event.target?.result as string)
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                        className="w-full p-2 border rounded"
+                      />
+                      {subCategoryImage && (
+                        <img src={subCategoryImage} alt="Preview" className="mt-2 w-16 h-16 object-cover rounded" />
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button type="submit">Create Subcategory</Button>
@@ -269,13 +293,16 @@ export default function CategoriesPage() {
                         </td>
                         <td className="py-3 font-medium">{category.name}</td>
                         <td className="py-3">
-                          <div className="flex flex-wrap gap-1">
+                          <div className="flex flex-wrap gap-2">
                             {subcategories
                               .filter(sub => sub.parentCategory === category.name)
                               .map(sub => (
-                                <span key={sub._id} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                                  {sub.name}
-                                </span>
+                                <div key={sub._id} className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                                  {sub.image && (
+                                    <img src={sub.image} alt={sub.name} className="w-4 h-4 object-cover rounded" />
+                                  )}
+                                  <span>{sub.name}</span>
+                                </div>
                               ))
                             }
                           </div>

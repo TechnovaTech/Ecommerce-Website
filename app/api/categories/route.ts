@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error updating category:', error)
-    return NextResponse.json({ error: 'Failed to update category: ' + error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to update category: ' + (error as Error).message }, { status: 500 })
   }
 }
 
