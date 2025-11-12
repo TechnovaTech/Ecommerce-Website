@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Search, LogIn, ShoppingCart, User, ChevronDown, Heart } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
+import RealTimeNotifications from "./real-time-notifications"
 
 export default function Header() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -158,6 +159,9 @@ export default function Header() {
                   <Search size={16} />
                 </button>
               </div>
+
+              {/* Real-time Notifications */}
+              <RealTimeNotifications />
 
               {/* Login/Profile */}
               {user ? (

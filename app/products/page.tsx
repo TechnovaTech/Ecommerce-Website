@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,7 @@ interface Product {
   status: string
 }
 
-export default function ProductsPage() {
+function ProductsContent() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<string[]>(["All Products"])
   const [selectedCategory, setSelectedCategory] = useState("All Products")
@@ -269,5 +269,24 @@ export default function ProductsPage() {
       </div>
       <Footer />
     </div>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mt-12 mx-auto px-4 py-8 pt-24">
+          <div className="animate-pulse">
+            <div className="bg-gray-200 h-8 rounded mb-4"></div>
+            <div className="bg-gray-200 h-32 rounded"></div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   )
 }
