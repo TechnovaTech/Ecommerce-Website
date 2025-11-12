@@ -34,6 +34,7 @@ interface Order {
   }>
   createdAt: string
   shippingAddress: {
+    name: string
     street: string
     city: string
     state: string
@@ -409,6 +410,7 @@ export default function OrdersPage() {
               
               <div>
                 <h3 className="font-semibold mb-2">Shipping Address</h3>
+                <p><strong>Name:</strong> {selectedOrder.shippingAddress.name || 'Not provided'}</p>
                 <p>{selectedOrder.shippingAddress.street}</p>
                 <p>{selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}</p>
                 <p>{selectedOrder.shippingAddress.zipCode}</p>
