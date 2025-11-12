@@ -5,6 +5,8 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart, Heart } from "lucide-react"
+import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
 
 interface Product {
   _id: string
@@ -28,6 +30,8 @@ interface ProductSectionProps {
 export default function ProductSection({ title, category, link }: ProductSectionProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const { updateCartCount } = useCart()
+  const { updateWishlistCount } = useWishlist()
 
   useEffect(() => {
     fetchProducts()
@@ -68,7 +72,7 @@ export default function ProductSection({ title, category, link }: ProductSection
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('Please login to add items to cart')
+        window.location.href = '/login'
         return
       }
 
@@ -85,12 +89,10 @@ export default function ProductSection({ title, category, link }: ProductSection
       })
 
       if (response.ok) {
-        alert('Added to cart!')
-      } else {
-        alert('Failed to add to cart')
+        updateCartCount()
       }
     } catch (error) {
-      alert('Failed to add to cart')
+      console.error('Failed to add to cart')
     }
   }
 
@@ -98,7 +100,7 @@ export default function ProductSection({ title, category, link }: ProductSection
     try {
       const token = localStorage.getItem('token')
       if (!token) {
-        alert('Please login to add items to wishlist')
+        window.location.href = '/login'
         return
       }
 
@@ -114,12 +116,10 @@ export default function ProductSection({ title, category, link }: ProductSection
       })
 
       if (response.ok) {
-        alert('Added to wishlist!')
-      } else {
-        alert('Failed to add to wishlist')
+        updateWishlistCount()
       }
     } catch (error) {
-      alert('Failed to add to wishlist')
+      console.error('Failed to add to wishlist')
     }
   }
 
