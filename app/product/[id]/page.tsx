@@ -1,0 +1,570 @@
+"use client"
+
+import { useState, useEffect, use } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Heart, ShoppingCart, Plus, Minus } from "lucide-react"
+import Link from "next/link"
+import Header from "@/components/header"
+import Footer from "@/components/footer"
+import { useToast } from "@/hooks/use-toast"
+import { useCart } from "@/lib/cart-context"
+import { useWishlist } from "@/lib/wishlist-context"
+
+
+interface Product {
+  _id: string
+  name: string
+  sku?: string
+  size?: string
+  price: number
+  stock: number
+  category: string
+  discount: number
+  description: string
+  images: string[]
+  status: string
+}
+
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
+  const { toast } = useToast()
+  const { updateCartCount } = useCart()
+  const { updateWishlistCount, isInWishlist, addToWishlistLocal, removeFromWishlistLocal } = useWishlist()
+  const [product, setProduct] = useState<Product | null>(null)
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [quantity, setQuantity] = useState(1)
+  const [localWishlist, setLocalWishlist] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    fetchProduct()
+  }, [id])
+
+  useEffect(() => {
+    // Sync local wishlist with global wishlist on mount
+    if (product) {
+      if (isInWishlist(product._id)) {
+        setLocalWishlist(prev => new Set([...prev, product._id]))
+      }
+    }
+  }, [product, isInWishlist])
+
+  const fetchProduct = async () => {
+    try {
+      console.log('Fetching product with ID:', id)
+      const response = await fetch(`/api/products/${id}`)
+      console.log('Response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('Product data:', data)
+        setProduct(data)
+        fetchRelatedProducts(data.category)
+        // Sync wishlist state for this product
+        if (isInWishlist(data._id)) {
+          setLocalWishlist(prev => new Set([...prev, data._id]))
+        }
+      } else {
+        const errorData = await response.json()
+        console.error('API Error:', errorData)
+      }
+    } catch (error) {
+      console.error('Failed to fetch product:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchRelatedProducts = async (category: string) => {
+    try {
+      const response = await fetch('/api/products')
+      if (response.ok) {
+        const data = await response.json()
+        const related = data
+          .filter((p: Product) => p.category === category && p._id !== id)
+          .slice(0, 4)
+        setRelatedProducts(related)
+      }
+    } catch (error) {
+      console.error('Failed to fetch related products:', error)
+    }
+  }
+
+  const addToCart = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to add items to your cart.",
+          className: "bg-white border-red-200",
+          duration: 3000,
+        })
+        window.location.href = '/login'
+        return
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product?._id,
+          quantity: quantity
+        })
+      })
+
+      if (response.ok) {
+        updateCartCount()
+        toast({
+          title: "🛍️ Added to Cart!",
+          description: `Successfully added ${quantity} item(s) to your cart.`,
+          className: "bg-white border-green-200",
+          duration: 3000,
+        })
+      } else {
+        const errorData = await response.json()
+        toast({
+          title: "❌ Failed to Add",
+          description: errorData.error || "Failed to add item to cart. Please try again.",
+          className: "bg-white border-red-200",
+          duration: 3000,
+        })
+      }
+    } catch (error) {
+      console.error('Add to cart error:', error)
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to cart. Please try again.",
+        className: "bg-white border-red-200",
+        duration: 3000,
+      })
+    }
+  }
+
+  const toggleWishlist = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to manage your wishlist.",
+          variant: "destructive",
+          duration: 3000,
+        })
+        return
+      }
+
+      if (!product) return
+
+      const currentlyInWishlist = isInWishlist(product._id)
+      const method = currentlyInWishlist ? 'DELETE' : 'POST'
+      const response = await fetch('/api/wishlist', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: product._id
+        })
+      })
+
+      // Immediate UI update
+      if (currentlyInWishlist) {
+        setLocalWishlist(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(product._id)
+          return newSet
+        })
+      } else {
+        setLocalWishlist(prev => new Set([...prev, product._id]))
+      }
+
+      if (response.ok) {
+        if (currentlyInWishlist) {
+          removeFromWishlistLocal(product._id)
+        } else {
+          addToWishlistLocal(product._id)
+        }
+        updateWishlistCount()
+        toast({
+          title: currentlyInWishlist ? "❤️ Removed from Wishlist" : "❤️ Added to Wishlist!",
+          description: currentlyInWishlist ? "Item removed from your wishlist." : "Item added to your wishlist successfully.",
+          duration: 3000,
+        })
+      } else {
+        toast({
+          title: "❌ Wishlist Update Failed",
+          description: "Failed to update wishlist. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Wishlist Update Failed",
+        description: "An error occurred while updating wishlist. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    }
+  }
+
+  const buyNow = async () => {
+    await addToCart()
+    // Redirect to cart or checkout
+    window.location.href = '/cart'
+  }
+
+  const addToCartRelated = async (relatedProduct: Product) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to add items to your cart.",
+          variant: "destructive",
+          duration: 3000,
+        })
+        return
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: relatedProduct._id,
+          quantity: 1
+        })
+      })
+
+      if (response.ok) {
+        updateCartCount()
+        toast({
+          title: "🛍️ Added to Cart!",
+          description: `${relatedProduct.name} has been added to your cart.`,
+          duration: 3000,
+        })
+      } else {
+        toast({
+          title: "❌ Failed to Add",
+          description: "Failed to add item to cart. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to cart. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    }
+  }
+
+  const addToWishlistRelated = async (relatedProduct: Product) => {
+    // Immediate UI update
+    setLocalWishlist(prev => new Set([...prev, relatedProduct._id]))
+    
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        toast({
+          title: "🔒 Login Required",
+          description: "Please login to add items to your wishlist.",
+          variant: "destructive",
+          duration: 3000,
+        })
+        return
+      }
+
+      const response = await fetch('/api/wishlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          productId: relatedProduct._id
+        })
+      })
+
+      if (response.ok) {
+        addToWishlistLocal(relatedProduct._id)
+        updateWishlistCount()
+        toast({
+          title: "❤️ Added to Wishlist!",
+          description: `${relatedProduct.name} has been added to your wishlist.`,
+          duration: 3000,
+        })
+      } else {
+        toast({
+          title: "❌ Failed to Add",
+          description: "Failed to add item to wishlist. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Failed to Add",
+        description: "An error occurred while adding to wishlist. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+          <div className="animate-pulse">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-gray-200 h-96 rounded-lg"></div>
+              <div className="space-y-4">
+                <div className="bg-gray-200 h-8 rounded"></div>
+                <div className="bg-gray-200 h-6 rounded w-3/4"></div>
+                <div className="bg-gray-200 h-12 rounded"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-8 pt-24">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+            <Link href="/products" className="text-red-600 hover:underline">
+              Back to Products
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-7xl mx-auto mt-12 px-4 py-8 pt-24">
+        {/* Breadcrumb */}
+        <div className="mb-6 text-sm text-gray-600">
+          <Link href="/" className="hover:text-red-600">Home</Link> &gt; 
+          <Link href="/products" className="hover:text-red-600 ml-1">Products</Link> &gt; 
+          <span className="ml-1">{product.name}</span>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {/* Image Section */}
+          <div className="bg-white p-8 rounded-lg">
+            <div className="relative mb-4">
+              <img
+                src={product.images[selectedImage] || "/placeholder.svg"}
+                alt={product.name}
+                className="w-full max-h-96 object-contain rounded-lg bg-gray-50"
+              />
+              {product.discount > 0 && (
+                <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded text-sm">
+                  {product.discount}% OFF
+                </div>
+              )}
+            </div>
+            {product.images.length > 1 && (
+              <div className="grid grid-cols-5 gap-2">
+                {product.images.slice(0, 5).map((img, i) => (
+                  <img
+                    key={i}
+                    src={img}
+                    alt={`thumb-${i}`}
+                    onClick={() => setSelectedImage(i)}
+                    className={`w-full h-16 object-contain rounded border-2 cursor-pointer hover:border-red-600 bg-gray-50 ${
+                      selectedImage === i ? 'border-red-600' : 'border-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Details Section */}
+          <div className="bg-white p-8 rounded-lg">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">{product.name}</h1>
+            {product.sku && <p className="text-sm text-black mb-2">{product.sku}</p>}
+            
+            {/* Price Section */}
+            <div className="mb-4">
+              <div className="flex items-baseline gap-3 mb-2">
+                {product.discount > 0 ? (
+                  <>
+                    <span className="text-3xl font-bold text-red-600">₹{product.price}</span>
+                    <span className="text-lg text-gray-500 line-through ml-2">
+                      ₹{Math.round(product.price / (1 - product.discount / 100))}
+                    </span>
+                    <span className="text-lg font-bold text-red-600 ml-2">({product.discount}% Off)</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-bold text-red-600">₹{product.price}</span>
+                  </>
+                )}
+              </div>
+
+            </div>
+
+            {/* Select Size */}
+            {product.size && (
+              <div className="mb-4">
+                <label className="block text-lg font-bold mb-2">Select Size</label>
+                <div className="inline-block px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">
+                  {product.size}
+                </div>
+              </div>
+            )}
+
+            {/* Quantity Selector */}
+            <div className="mb-4">
+              <label className="block text-lg font-bold mb-2">Quantity:</label>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  disabled={quantity <= 1}
+                >
+                  <Minus size={16} />
+                </Button>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 text-center"
+                  min="1"
+                  max={product.stock}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  disabled={quantity >= product.stock}
+                >
+                  <Plus size={16} />
+                </Button>
+
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mb-4">
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white text-sm py-3 px-6 rounded-lg flex items-center gap-2 justify-center font-medium"
+                onClick={addToCart}
+              >
+                <ShoppingCart size={16} />
+                Add To Cart
+              </Button>
+              <Button 
+                variant="outline"
+                className="bg-white border-gray-600 text-sm py-3 px-6 rounded-lg flex items-center gap-2 justify-center font-medium hover:bg-white hover:border-gray-600 hover:text-black"
+                onClick={toggleWishlist}
+              >
+                <Heart 
+                  size={16} 
+                  className={product && (isInWishlist(product._id) || localWishlist.has(product._id)) ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+                />
+                Add to Wishlist
+              </Button>
+            </div>
+
+          </div>
+        </div>
+
+
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="bg-white rounded-lg p-8">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Related Products</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((relatedProduct) => (
+                <Link key={relatedProduct._id} href={`/product/${relatedProduct._id}`}>
+                  <Card className="overflow-hidden hover:shadow-lg transition cursor-pointer">
+                    <div className="relative h-48 bg-gray-100">
+                      <img
+                        src={relatedProduct.images[0] || "/placeholder.svg"}
+                        alt={relatedProduct.name}
+                        className="w-full h-full object-cover"
+                      />
+                      {relatedProduct.discount > 0 && (
+                        <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                          {relatedProduct.discount}% OFF
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="text-sm font-medium text-gray-800 line-clamp-2 mb-2">{relatedProduct.name}</h3>
+                      <p className="text-xs text-gray-600 mb-2">{relatedProduct.category}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-lg font-bold text-red-600">₹{relatedProduct.price}</span>
+                        {relatedProduct.discount > 0 && (
+                          <span className="text-sm text-gray-400 line-through ml-1">
+                            ₹{Math.round(relatedProduct.price / (1 - relatedProduct.discount / 100))}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs flex items-center gap-1 justify-center rounded-lg font-medium py-2"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            addToCartRelated(relatedProduct)
+                          }}
+                        >
+                          <ShoppingCart size={12} />
+                          Add to Cart
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="px-2"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            addToWishlistRelated(relatedProduct)
+                          }}
+                        >
+                          <Heart 
+                            size={12} 
+                            className={(isInWishlist(relatedProduct._id) || localWishlist.has(relatedProduct._id)) ? 'fill-red-500 text-red-500' : 'text-gray-400'} 
+                          />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      <Footer />
+    </div>
+  )
+}
